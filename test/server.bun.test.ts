@@ -48,3 +48,20 @@ test("the panel serves static files and the SPA under Bun", async () => {
     ok: true,
   });
 });
+
+test("startServer uses Bun.serve under Bun, and the Node bridge on request", async () => {
+  const { startServer } = await import("../src/cli/index.ts");
+  const handler = () => {
+    const headers = new Headers();
+    headers.append("set-cookie", "a=1");
+    headers.append("set-cookie", "b=2");
+    return new Response("ok", { headers });
+  };
+  for (const node of [false, true]) {
+    const server = await startServer(0, handler, { node, hostname: "127.0.0.1" });
+    const res = await fetch(`http://127.0.0.1:${server.port}/`);
+    expect(await res.text()).toBe("ok");
+    expect(res.headers.getSetCookie()).toEqual(["a=1", "b=2"]);
+    await server.stop();
+  }
+});
