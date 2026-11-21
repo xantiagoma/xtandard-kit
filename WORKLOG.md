@@ -117,3 +117,28 @@
   - **audit:** net -5,672, 0 removals; its event log sits on the kit internals;
   - **links** (t8r) and **entitlements** (t8w) are in progress.
 - The shared tarball at `xtandard-kit-wt-pilot/pack` is re-packed at kit main `9a16c7f`.
+
+## 2026-11-21: all five migrations green locally; waiting on the npm publish
+
+- Migration branches `feat/kit-migration` (no PRs until the kit is on npm). Net LOC and API-surface
+  removals:
+  - webhooks: 394a449, -5.2k, 0 removed;
+  - flags: 11a9fcd, -5.6k, 0 removed;
+  - audit: f733f86, -5.7k, 0 removed;
+  - links: c15bcce, -5.7k, 0 removed;
+  - entitlements: a72b77a, -6.1k, 0 removed; adopted the kit router, OpenAPI identical.
+
+  Each carries the kit's README and site ecosystem row.
+
+- Kit fixes from the migrations for 0.1.1:
+  - #24: a real libsql `Client` assigns again, late-bound clocks, `site/public`, the ClickHouse
+    service;
+  - #25: `parseArgs` keeps negative values;
+  - #26: `SectionCard` a11y;
+  - #27: `util/core`, `readonlyMessage` fn, `driver` override, drizzle db type.
+
+  The v0.1.1 notes are in draft PR #22.
+
+- Phase 5: ready branches `docs/ecosystem-kit` for xtandard (lib) 3dd2b5e, xyte 1a21d22 and
+  xtandard-image f0c6522 were sent to t1r.
+- Shared kit tarballs use unique names now (`0.1.1-dev.<sha>`), so no lockfile or cache dance.
