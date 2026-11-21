@@ -7,7 +7,7 @@ en = entitlements.
 
 ## v0.1.1
 
-Fixes and additions found by migrating webhooks, flags and audit onto the kit. Backwards compatible.
+Fixes and additions found by migrating the five products onto the kit. Backwards compatible.
 
 ### Fixed
 
@@ -20,6 +20,12 @@ Fixes and additions found by migrating webhooks, flags and audit onto the kit. B
   `resolveUiDir` and `isMainModule` now work without it.
 - **cli:** `isMainModule` compares a path it can't resolve as written, instead of returning `false`.
 - **storage/mongodb:** `isDuplicateKey` also recognises E11000 inside bulk-write `writeErrors`.
+- **tokens, util:** `createScopedTokens` and `createIdGenerator` read the clock late, so fake timers
+  that swap the global `Date` (`vi.setSystemTime`) move token expiry and id time.
+- **site:** the sync overwrites only the listed public assets, instead of deleting `site/public/`
+  (li commits files there).
+- **workflows:** `ci.yml` starts ClickHouse with a CI-only password and a health check, and exports
+  `CLICKHOUSE_URL`, `CLICKHOUSE_USER` and `CLICKHOUSE_PASSWORD` (li).
 - **tokens:** `create()` signs the claims `validateClaims` returns, so `verify` yields exactly what
   was signed (a normalising validator was ignored at mint time).
 
