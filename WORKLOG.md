@@ -40,3 +40,17 @@
   - README with the ecosystem table, CLAUDE.md with the "how to add a fix once" note, CHANGELOG;
   - reusable `ci.yml` plus the kit's own `kit-ci.yml`.
 - Local results: `check`, `test`, `vp pack` and `publint` are clean.
+
+## 2026-11-21 — AUTH_MODE hotfixes merged; phase 3 workers started
+
+- Reviewed and squash-merged the AUTH_MODE fail-open hotfixes: webhooks#15, flags#23 (also the
+  standalone image), audit#25, links#19. CI was green on all four. t1r was asked for patch releases
+  and image rebuilds.
+- Created the public repo xantiagoma/xtandard-kit (MIT). `main` CI is green (reusable `ci.yml` via
+  `kit-ci.yml`).
+- Started three build workers, each in its own worktree with disjoint files:
+  - `kit-build-storage` (t6z);
+  - `kit-build-server` (t70);
+  - `kit-build-ui` (t71): UI kit, build tooling, site and workflows.
+
+  Briefs live in the session scratchpad (BUILD-*.md).
