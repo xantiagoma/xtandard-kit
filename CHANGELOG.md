@@ -7,7 +7,7 @@ en = entitlements.
 
 ## v0.1.1
 
-Fixes and additions found by migrating webhooks and flags onto the kit. Backwards compatible.
+Fixes and additions found by migrating webhooks, flags and audit onto the kit. Backwards compatible.
 
 ### Fixed
 
@@ -19,6 +19,9 @@ Fixes and additions found by migrating webhooks and flags onto the kit. Backward
   not built" fallback page instead of the SPA, because `process.getBuiltinModule` is missing there.
   `resolveUiDir` and `isMainModule` now work without it.
 - **cli:** `isMainModule` compares a path it can't resolve as written, instead of returning `false`.
+- **storage/mongodb:** `isDuplicateKey` also recognises E11000 inside bulk-write `writeErrors`.
+- **tokens:** `create()` signs the claims `validateClaims` returns, so `verify` yields exactly what
+  was signed (a normalising validator was ignored at mint time).
 
 ### Added
 
@@ -29,6 +32,13 @@ Fixes and additions found by migrating webhooks and flags onto the kit. Backward
   accepts a URL (a bare `import.meta` warns in CJS builds).
 - **util:** `validateKeySegment(value, path, { maxLength })`.
 - **build:** the example runner gets a `seed` step, and `demo` is optional.
+- **storage/testing:** a `padSpaceKeys` capability, so the trailing-space case expects
+  `KeyCollisionError` on a PAD SPACE MySQL key column (the products' default) instead of failing.
+- **storage internals:** `SqliteExecutor.atomic(statements)` runs multi-statement writes all or
+  nothing (`BEGIN IMMEDIATE` on bun:sqlite, a write `batch` on libSQL), for product tables (au's
+  event log, en's counters). `LibsqlClientLike` gains an optional `batch`.
+- **util:** `canonicalStringify` accepts `undefined` members and items, like `JSON.stringify`
+  (`CanonicalInput`).
 
 ## v0.1.0
 
