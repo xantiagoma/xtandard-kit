@@ -42,6 +42,38 @@ runStorageConformance(
   },
 );
 
+// flags' default mode (ADR 0005): legacy files are read through and removed on the next write.
+// Keys such as `a%25` (the encoded form of `a%`) must not alias another key's file.
+let readThroughDir = "";
+runStorageConformance(
+  "file (legacy: read-through)",
+  async () =>
+    createFileStorage({ dir: (readThroughDir = await freshDir()), legacy: "read-through" }),
+  {
+    t: { describe, test, expect },
+    capabilities: { compareAndSwap: true, watch: { settleMs: 150 } },
+    seedLegacy: async (_storage, key, raw) => {
+      const path = pathOf(readThroughDir, key);
+      await mkdir(dirname(path), { recursive: true });
+      await writeFile(path, raw, "utf8");
+    },
+  },
+);
+
+test("read-through: writing x/a%25/k never touches x/a%/k's file", async () => {
+  const dir = await freshDir();
+  const storage = createFileStorage({ dir, legacy: "read-through" });
+  await storage.setItem("x/a%/k", { v: "percent" });
+  await storage.setItem("x/a%25/k", { v: "literal" });
+  expect(await storage.getItem("x/a%/k")).toEqual({ v: "percent" });
+  await storage.removeItem("x/a%25/k");
+  expect(await storage.getItem("x/a%/k")).toEqual({ v: "percent" });
+  expect(await storage.getItem("x/a%25/k")).toBeNull();
+  await storage.setItem("x/A", 1);
+  await storage.setItem("x/^a", 2);
+  expect(await storage.getItem("x/A")).toBe(1);
+});
+
 describe("file segment codec", () => {
   test("case, accents, empty and dot segments map to distinct, safe names", () => {
     expect(encodeSegment("Acme")).toBe("^acme");

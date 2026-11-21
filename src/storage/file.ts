@@ -116,13 +116,17 @@ const keyToPath = (dir: string, key: string): string =>
   join(dir, ...key.split("/").map(encodeSegment)) + JSON_SUFFIX;
 
 /**
- * The legacy (raw segment) path of `key`, when it differs from the encoded one. Keys with an empty
- * segment have none: the legacy layout collapsed `a//b` onto `a/b`, so reading through would alias
- * another key.
+ * The legacy (raw segment) path of `key`, when there is an unambiguous one. Keys have none when:
+ * - a segment is empty: the legacy layout collapsed `a//b` onto `a/b`, so reading through would alias
+ *   another key;
+ * - every raw segment is itself a valid encoded name (`a%25`, `^a`): the raw path is then the
+ *   encoded path of a *different* key (`a%25` is how `a%` is encoded), so reading or removing it
+ *   would touch that key's file. {@link leafKey} reads such a leaf as encoded, by the same rule.
  */
 function legacyPath(dir: string, key: string): string | undefined {
   const segments = key.split("/");
   if (segments.includes("")) return undefined;
+  if (segments.every(isEncoded)) return undefined;
   const path = join(dir, ...segments) + JSON_SUFFIX;
   return path === keyToPath(dir, key) ? undefined : path;
 }
