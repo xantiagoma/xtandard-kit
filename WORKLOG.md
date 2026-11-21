@@ -53,4 +53,4 @@
   - `kit-build-server` (t70);
   - `kit-build-ui` (t71): UI kit, build tooling, site and workflows.
 
-  Briefs live in the session scratchpad (BUILD-*.md).
+  Briefs live in the session scratchpad (BUILD-\*.md).
