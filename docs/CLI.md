@@ -81,6 +81,7 @@ const storage = await storageFromEnv<WebhooksStorage>({
     },
   },
   allowed: ["memory", "file", "redis", "postgres", "mongodb", "sqlite", "libsql"], // optional
+  driver: flags.storage as string | undefined, // optional: overrides the env var (still validated)
 });
 ```
 

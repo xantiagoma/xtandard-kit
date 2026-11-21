@@ -298,3 +298,18 @@ describe("pilot feedback (0.1.x)", () => {
     expect(validateKeySegment("a".repeat(5000), "k")).toEqual([]);
   });
 });
+
+describe("util/core (entitlements feedback)", () => {
+  test("exports the dependency-free helpers without importing valibot", async () => {
+    const core = await import("../src/entry-util-core.ts");
+    expect(core.durationToMs("1w")).toBe(7 * 24 * 3600 * 1000);
+    expect(typeof core.createIdGenerator).toBe("function");
+    expect(core.canonicalStringify({ b: 1, a: 2 })).toBe('{"a":2,"b":1}');
+    const { readFile } = await import("node:fs/promises");
+    for (const f of ["util/duration.ts", "util/id.ts", "internal/json.ts", "entry-util-core.ts"]) {
+      expect(await readFile(new URL(`../src/${f}`, import.meta.url), "utf8")).not.toMatch(
+        /from "valibot"|import\("valibot"\)/,
+      );
+    }
+  });
+});

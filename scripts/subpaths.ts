@@ -58,6 +58,7 @@ export const SUBPATHS: Subpath[] = [
   { path: "adapters/next" },
   { path: "cli" },
   { path: "util" },
+  { path: "util/core" },
   { path: "testing" },
   {
     path: "ui",

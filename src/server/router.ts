@@ -120,7 +120,7 @@ export interface RouterOptions<
   /** Status of a readonly denial: 403 (webhooks, flags, links) or 423 (audit, entitlements). Default `403`. */
   readonlyStatus?: number;
   /** Message of a readonly denial. Default `"The panel is readonly"`. */
-  readonlyMessage?: string;
+  readonlyMessage?: string | ((route: RouteSpec<Action>) => string);
   /** Domain errors by name (see `mapError`). */
   errors?: ErrorMap;
   /** Unmatched paths under this prefix answer a JSON 404 instead of `null`. Default `"/api/"`. */
@@ -178,7 +178,10 @@ export function createRouter<
   const scoped = options.scoped as NonNullable<typeof options.scoped>;
   const apiPrefix = options.apiPrefix ?? "/api/";
   const readonlyStatus = options.readonlyStatus ?? 403;
-  const readonlyMessage = options.readonlyMessage ?? "The panel is readonly";
+  const readonlyMessage = (route: RouteSpec<Action>): string =>
+    typeof options.readonlyMessage === "function"
+      ? options.readonlyMessage(route)
+      : (options.readonlyMessage ?? "The panel is readonly");
   const isReadonly =
     typeof options.readonly === "function"
       ? options.readonly
@@ -263,7 +266,7 @@ export function createRouter<
         );
         if (!ok) return error(403, "Forbidden", { action: route.action });
         if (isReadonly() && options.isMutatingAction?.(route.action)) {
-          return error(readonlyStatus, readonlyMessage, { code: "READONLY" });
+          return error(readonlyStatus, readonlyMessage(route), { code: "READONLY" });
         }
       }
 

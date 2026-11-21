@@ -1,7 +1,9 @@
 # Utilities and test helpers
 
 Small pieces every product uses: `@xtandard/kit/util` (durations, ids, validation, JSON types) and
-`@xtandard/kit/testing`.
+`@xtandard/kit/testing`. `@xtandard/kit/util/core` is the dependency-free part (durations, ids,
+canonical JSON, the JSON and `Actor` types). It never loads `valibot`, so hot paths that only mint
+ids or parse durations stay light.
 
 ## Durations
 

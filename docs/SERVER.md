@@ -194,6 +194,7 @@ const router = createRouter({
   isMutatingAction,
   readonly: options.readonly, // or () => core.readonly
   readonlyStatus: 403, // 403 wh/fl/li, 423 au/en (ADR 0010)
+  readonlyMessage: (route) => `Cannot ${route.operationId}: the panel is readonly.`, // or a string
   errors: ERROR_MAP,
 });
 createPanelHandler({ …, api: router.handle });
