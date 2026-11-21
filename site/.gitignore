@@ -1,0 +1,8 @@
+# Written by scripts/sync.ts and starlight-typedoc; never edit or commit.
+/src/content/docs/
+# Copied from docs/assets/ by scripts/sync.ts.
+/public/
+# Astro's generated types, caches and build output.
+/.astro/
+/dist/
+/node_modules/

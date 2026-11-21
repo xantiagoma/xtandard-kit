@@ -1,0 +1,64 @@
+---
+title: "@xtandard/kit"
+description: The shared building blocks of the xtandard products — storage drivers and conformance suite, auth, HTTP plumbing, adapters, the React admin shell, build and docs-site tooling. MIT licensed.
+template: splash
+pagefind: false
+hero:
+  title: "@xtandard/kit"
+  tagline: One implementation of the infrastructure the xtandard products used to copy from each other. Fix a bug here once, and webhooks, flags, audit, links and entitlements all get it.
+  actions:
+    - text: Entry points
+      link: "@BASE@/entry-points/"
+      icon: right-arrow
+    - text: API reference
+      link: "@BASE@/api/"
+      variant: minimal
+    - text: View on GitHub
+      link: "@REPO@"
+      icon: external
+      variant: minimal
+---
+
+{/* The home page: written for the site; its content follows the root README.
+scripts/sync.ts replaces the BASE, REPO and NPM tokens. */}
+
+import { Card, CardGrid, LinkCard } from "@astrojs/starlight/components";
+
+```sh
+bun add @xtandard/kit
+```
+
+You don't install the kit to use an xtandard product: each product depends on it directly. You need
+it when you build an xtandard-style product, or when you work on one. It is **one package** with
+subpath exports, and every database client, framework and build tool is an **optional peer
+dependency**, loaded only by the subpath that needs it.
+
+## What's inside
+
+<CardGrid>
+  <Card title="Storage" icon="seti:db">
+    The KV contract with watch and compare-and-swap, ten drivers, and the conformance suite every
+    product runs against its own drivers.
+  </Card>
+  <Card title="Server" icon="setting">
+    Auth and authorization providers, hooks, panel serving, the router and OpenAPI generator,
+    scoped tokens, framework adapters and CLI plumbing.
+  </Card>
+  <Card title="UI kit" icon="laptop">
+    The React admin shell, primitives, theme store, API client and the embed factory, compiled ESM
+    with a Tailwind stylesheet.
+  </Card>
+  <Card title="Tooling" icon="puzzle">
+    The `xtandard-kit` bin (embed CSS scoping, API-surface gate), config factories, this docs-site
+    tooling and the reusable GitHub workflows.
+  </Card>
+</CardGrid>
+
+## Fix once, ship everywhere
+
+<CardGrid>
+  <LinkCard title="Plan" href="@BASE@/plan/" description="What goes in the kit and how the products consume it." />
+  <LinkCard title="Architecture decisions" href="@BASE@/project/adr/0001/" description="The ten ADRs behind the kit's design." />
+  <LinkCard title="Reusable workflows" href="@BASE@/workflows/" description="CI, Pages, Docker and release preparation, shared by every product." />
+  <LinkCard title="The xtandard ecosystem" href="@BASE@/project/ecosystem/" description="The products built on the kit." />
+</CardGrid>

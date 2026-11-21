@@ -1,0 +1,11 @@
+{
+  // The program the API reference (starlight-typedoc) reads: every entry point under src/.
+  "extends": "../tsconfig.json",
+  "include": [
+    "../src/**/*.ts",
+    "../src/**/*.tsx",
+    "../scripts/vendor.d.ts",
+    "../tsconfig/assets.d.ts"
+  ],
+  "exclude": ["../dist", "../node_modules"]
+}
