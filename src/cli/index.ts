@@ -67,9 +67,12 @@ export function parseArgs(argv: readonly string[], options: ParseArgsOptions = {
   const booleans = new Set(options.boolean ?? ["help", "version"]);
   const _: string[] = [];
   const flags: Record<string, string | boolean> = {};
+  // Only `--…` and a configured short flag (`-t`) start a new flag: `-5`, `-1` and `-` are values.
+  const isFlag = (token: string): boolean =>
+    token.startsWith("--") || (/^-[A-Za-z]$/.test(token) && Boolean(short[token.slice(1)]));
   const takeValue = (key: string, i: number): number => {
     const next = argv[i + 1];
-    if (booleans.has(key) || next === undefined || next.startsWith("-")) {
+    if (booleans.has(key) || next === undefined || isFlag(next)) {
       flags[key] = true;
       return i;
     }
