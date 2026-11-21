@@ -211,6 +211,9 @@ const storage = createDrizzleStorage({ db: drizzle(pool), table: kv }); // diale
 - `createDrizzleStorage` issues no DDL and never closes `db`. CAS is one statement on all three
   dialects: `jsonb` equality on pg, `JSON` equality on MySQL (with a found-rows fallback for drivers
   without `CLIENT_FOUND_ROWS`), canonical text on SQLite with the structural fallback for legacy rows.
+- `getKeys` on MySQL matches the bytewise range `key >= prefix AND key < successor(prefix)` rather
+  than `LIKE 'prefix%'`: MySQL's range optimizer skips supplementary characters (emoji) for an
+  indexed `LIKE` on a `utf8mb4_bin` key. Both are index-usable.
 - A MySQL table created before the key column was binary-collated:
 
   ```sql
