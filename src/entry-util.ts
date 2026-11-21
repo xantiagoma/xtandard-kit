@@ -30,5 +30,10 @@ export {
   type ValidationIssue,
   type ValidationResult,
 } from "./util/validation.ts";
-export { canonicalStringify, type JsonObject, type JsonValue } from "./internal/json.ts";
+export {
+  canonicalStringify,
+  type CanonicalInput,
+  type JsonObject,
+  type JsonValue,
+} from "./internal/json.ts";
 export type { Actor } from "./util/types.ts";

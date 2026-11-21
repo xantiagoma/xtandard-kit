@@ -122,7 +122,14 @@ export function mongoConnection(
 
 /** True for a MongoDB duplicate-key error (E11000). Semi-public. */
 export function isDuplicateKey(error: unknown): boolean {
-  return (error as { code?: unknown } | null)?.code === 11000;
+  const e = error as { code?: unknown; writeErrors?: unknown } | null;
+  if (e?.code === 11000) return true;
+  // Bulk writes (`insertMany`, `bulkWrite`) may report E11000 only per write.
+  const writeErrors = e?.writeErrors;
+  return (
+    Array.isArray(writeErrors) &&
+    writeErrors.some((w) => (w as { code?: unknown } | null)?.code === 11000)
+  );
 }
 
 const isAlreadyConnected = (error: unknown): boolean => {

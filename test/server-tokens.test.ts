@@ -247,3 +247,25 @@ describe("createScopedTokens", () => {
     );
   });
 });
+
+describe("create signs the validated claims (audit feedback)", () => {
+  test("a normalising validator is honoured at mint time", async () => {
+    const tokens = createScopedTokens({
+      prefix: "audpt_",
+      ttl: "1h",
+      validateClaims: (p) => {
+        const filter = p.filter as Record<string, unknown> | undefined;
+        return {
+          tenant: str(p, "tenant"),
+          ...(filter && Object.keys(filter).length ? { filter } : {}),
+        };
+      },
+    });
+    const token = await tokens.create("s", { tenant: "acme", filter: {} }, { now: 0 });
+    const payload = JSON.parse(
+      atob(token.slice(6).split(".")[0]!.replace(/-/g, "+").replace(/_/g, "/")),
+    );
+    expect(payload).toEqual({ tenant: "acme", exp: 3_600_000 });
+    expect((await tokens.verify("s", token, { now: 1 })).claims).toEqual({ tenant: "acme" });
+  });
+});

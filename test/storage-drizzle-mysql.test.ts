@@ -49,6 +49,24 @@ describe.skipIf(!MYSQL_URL)("drizzle mysql (live)", () => {
     },
   );
 
+  // The products' default (existing-table) collation: the whole suite still runs, with the
+  // trailing-space case expecting a refused write (padSpaceKeys).
+  runStorageConformance(
+    "drizzle (mysql2, default utf8mb4_bin keys)",
+    async () => {
+      const p = await getPool();
+      current = `kv_${n++}`;
+      const table = mysqlKvTable(current);
+      await p.query(createTableSql(table, "mysql"));
+      return createDrizzleStorage({ db: drizzle(p as never), table });
+    },
+    {
+      t: { describe, test, expect },
+      capabilities: { compareAndSwap: true, padSpaceKeys: true },
+      timeout: 30_000,
+    },
+  );
+
   test("a PAD SPACE utf8mb4_bin table refuses trailing-space collisions instead of overwriting", async () => {
     const p = await getPool();
     const name = `kv_pad_${n++}`;

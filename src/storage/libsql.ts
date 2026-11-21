@@ -48,6 +48,11 @@ export interface LibsqlClientLike {
   execute(
     stmt: string | { sql: string; args: unknown[] },
   ): Promise<{ rows: ArrayLike<Record<string, unknown>> }>;
+  /** Run statements in one transaction (`"write"` mode). Present on `@libsql/client` clients. */
+  batch?(
+    stmts: Array<{ sql: string; args: unknown[] }>,
+    mode: "write",
+  ): Promise<Array<{ rowsAffected: number }>>;
   /** Close the client. */
   close(): void;
 }
@@ -108,6 +113,15 @@ export function libsqlExecutor(client: LibsqlClientLike): SqliteExecutor {
     async all(sql, args) {
       const { rows } = await client.execute({ sql, args });
       return Array.from(rows);
+    },
+    async atomic(statements) {
+      if (!client.batch)
+        throw new Error("libsqlExecutor: the client has no batch() for atomic writes");
+      const results = await client.batch(
+        statements.map((s) => ({ sql: s.sql, args: [...s.args] })),
+        "write",
+      );
+      return results.map((r) => Number(r.rowsAffected));
     },
   };
 }

@@ -152,3 +152,14 @@ describe("mongodb driver (no server)", () => {
     await conn.close(); // borrowed: not closed
   });
 });
+
+describe("isDuplicateKey", () => {
+  test("recognises E11000 on the error and in bulk writeErrors", async () => {
+    const { isDuplicateKey } = await import("../src/storage/mongodb.ts");
+    expect(isDuplicateKey({ code: 11000 })).toBe(true);
+    expect(isDuplicateKey({ writeErrors: [{ code: 121 }, { code: 11000 }] })).toBe(true);
+    expect(isDuplicateKey({ writeErrors: [{ code: 121 }] })).toBe(false);
+    expect(isDuplicateKey(null)).toBe(false);
+    expect(isDuplicateKey(new Error("x"))).toBe(false);
+  });
+});

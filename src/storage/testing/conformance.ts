@@ -66,6 +66,12 @@ export interface ConformanceCapabilities {
    * then still produce an event, of any type. Default `true`.
    */
   watch?: boolean | { settleMs?: number; removals?: boolean };
+  /**
+   * The key column ignores trailing spaces (MySQL `utf8mb4_bin`, PAD SPACE, the products' default
+   * collation for existing tables). The trailing-space case then expects the colliding write to be
+   * refused with `KeyCollisionError` instead of both keys coexisting.
+   */
+  padSpaceKeys?: boolean;
 }
 
 /** Options for {@link runStorageConformance}. */
@@ -317,7 +323,24 @@ export const contractCases: ConformanceCase[] = [
   },
   {
     name: "keys differing only by trailing spaces stay distinct",
-    async run({ storage, key, expect }) {
+    async run({ storage, key, expect, options }) {
+      if (options.capabilities?.padSpaceKeys) {
+        // A PAD SPACE key column (MySQL utf8mb4_bin) can't hold both spellings: the colliding write
+        // must be refused, and must not overwrite or expose the other key (ADR 0005 §5).
+        await storage.setItem(key("sp", "a"), { i: 0 });
+        let refused: unknown = null;
+        try {
+          await storage.setItem(key("sp", "a "), { i: 1 });
+        } catch (error) {
+          refused = error;
+        }
+        expect((refused as { name?: unknown } | null)?.name).toBe("KeyCollisionError");
+        expect(await storage.getItem(key("sp", "a"))).toEqual({ i: 0 });
+        expect(await storage.getItem(key("sp", "a "))).toBeNull();
+        await storage.removeItem(key("sp", "a "));
+        expect(await storage.getItem(key("sp", "a"))).toEqual({ i: 0 });
+        return;
+      }
       const keys = [key("sp", "a"), key("sp", "a "), key("sp", "a  "), key("sp", "a", " ")];
       for (const [i, k] of keys.entries()) await storage.setItem(k, { i });
       for (const [i, k] of keys.entries()) expect(await storage.getItem(k)).toEqual({ i });

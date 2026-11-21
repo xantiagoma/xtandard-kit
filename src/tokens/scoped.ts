@@ -196,10 +196,12 @@ export function createScopedTokens<Claims extends object>(
     async create(secret, claims, createOptions = {}) {
       const [signing] = secretsOf(secret) as [string];
       const { exp: _ignored, ...rest } = claims as Record<string, unknown>;
-      validate(rest);
+      // Sign what `validateClaims` returns, so `verify` yields exactly the claims that were signed
+      // (a validator that normalises, e.g. drops an empty filter, is honoured at mint time too).
+      const validated = validate(rest) as Record<string, unknown>;
       const ttl =
         createOptions.expiresIn === undefined ? defaultTtl : durationToMs(createOptions.expiresIn);
-      const payload = { ...rest, exp: (createOptions.now ?? clock()) + ttl };
+      const payload = { ...validated, exp: (createOptions.now ?? clock()) + ttl };
       const payloadPart = base64urlEncode(encoder.encode(JSON.stringify(payload)));
       const signature = base64urlEncode(await hmac(signing, payloadPart));
       return `${prefix}${payloadPart}.${signature}`;
