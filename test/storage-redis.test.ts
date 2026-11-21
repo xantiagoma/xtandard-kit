@@ -39,8 +39,13 @@ function globToRegExp(glob: string): RegExp {
  * emulated, a SCAN that yields every key twice (Redis may repeat keys), and PSUBSCRIBE with real
  * glob matching (so an unescaped prefix would miss events).
  */
-function fakeRedis(): RedisLike & { strings: Map<string, string>; patterns: string[] } {
+function fakeRedis(): RedisLike & {
+  strings: Map<string, string>;
+  patterns: string[];
+  zsets: Map<string, Map<string, number>>;
+} {
   const strings = new Map<string, string>();
+  const zsets = new Map<string, Map<string, number>>();
   const subs = new Set<{ re: RegExp; listener: (m: string, ch: string) => void }>();
   const patterns: string[] = [];
   const emit = (key: string, event: string) => {
@@ -49,9 +54,32 @@ function fakeRedis(): RedisLike & { strings: Map<string, string>; patterns: stri
       if (s.re.test(ch)) queueMicrotask(() => s.listener(event, ch));
     }
   };
-  const self: RedisLike & { strings: Map<string, string>; patterns: string[] } = {
+  const self: RedisLike & {
+    strings: Map<string, string>;
+    patterns: string[];
+    zsets: Map<string, Map<string, number>>;
+  } = {
     strings,
     patterns,
+    zsets,
+    async zAdd(key, members) {
+      const set = zsets.get(key) ?? new Map<string, number>();
+      for (const m of [members].flat()) set.set(m.value, m.score);
+      zsets.set(key, set);
+    },
+    async zRem(key, members) {
+      for (const m of [members].flat()) zsets.get(key)?.delete(m);
+    },
+    async zRangeByScore(key, min, max) {
+      const bound = (v: number | string) =>
+        v === "-inf" ? -Infinity : v === "+inf" ? Infinity : Number(v);
+      const lo = bound(min);
+      const hi = bound(max);
+      return [...(zsets.get(key) ?? new Map<string, number>())]
+        .filter(([, score]) => score >= lo && score <= hi)
+        .sort((a, b) => a[1] - b[1])
+        .map(([member]) => member);
+    },
     isOpen: false,
     on: () => self,
     async connect() {
@@ -193,6 +221,28 @@ describe("redis driver (fake client)", () => {
       ["a", { v: 1 }, "x:a"],
       ["a", { v: 2 }, "x:a"],
       ["a", null, "x:a"],
+    ]);
+  });
+
+  test("onWrite can keep a sorted-set index with the typed client (the claimDue pattern)", async () => {
+    const c = fakeRedis();
+    const storage = createRedisStorage({
+      client: asClient(c),
+      prefix: "x",
+      onWrite: async (key, value, { client, toRedisKey }) => {
+        const due = /^whk\/app\/due\/(\d+)~/.exec(key);
+        if (!due) return;
+        if (value === null) await client.zRem(toRedisKey("whk:due"), key);
+        else await client.zAdd(toRedisKey("whk:due"), { score: Number(due[1]), value: key });
+      },
+    });
+    await storage.setItem("whk/app/due/0000000000020~d2", { id: "d2" });
+    await storage.setItem("whk/app/due/0000000000010~d1", { id: "d1" });
+    await storage.setItem("whk/app/endpoints/e1", { id: "e1" });
+    expect(await c.zRangeByScore("x:whk:due", 0, 15)).toEqual(["whk/app/due/0000000000010~d1"]);
+    await storage.removeItem("whk/app/due/0000000000010~d1");
+    expect(await c.zRangeByScore("x:whk:due", "-inf", "+inf")).toEqual([
+      "whk/app/due/0000000000020~d2",
     ]);
   });
 
