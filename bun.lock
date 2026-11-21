@@ -29,6 +29,7 @@
         "drizzle-orm": "^0.45.2",
         "elysia": "^1.4",
         "elysia-v2": "npm:elysia@2.0.0-rc.0",
+        "esbuild": "^0.25.12",
         "express": "^5.0.0",
         "happy-dom": "^15.11.0",
         "hono": "^4.6.0",
