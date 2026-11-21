@@ -21,6 +21,8 @@ Fixes and additions found by migrating the five products onto the kit. Backwards
 - **cli:** `isMainModule` compares a path it can't resolve as written, instead of returning `false`.
 - **cli:** `parseArgs` keeps negative numbers and a bare `-` as values (`--value -5`,
   `--limit -1`, `--reason -`). Only `--…` and configured short flags start a new flag (en).
+- **ui:** `SectionCard` is a named region: a string `title` labels the `<section>` (`aria-label`),
+  as entitlements' card did. It gains `flush`, `id` and `aria-label` props, and its header wraps.
 - **storage/mongodb:** `isDuplicateKey` also recognises E11000 inside bulk-write `writeErrors`.
 - **tokens, util:** `createScopedTokens` and `createIdGenerator` read the clock late, so fake timers
   that swap the global `Date` (`vi.setSystemTime`) move token expiry and id time.
