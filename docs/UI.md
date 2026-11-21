@@ -211,8 +211,13 @@ product's own props (`initialTenant`…), which are passed to `App`.
 
 ## Styles
 
+The kit stylesheet **replaces** the product's own `@import "tailwindcss"`: it already imports
+Tailwind, so the product stylesheet starts with the kit import and must not import Tailwind a second
+time (that would emit the preflight and utilities twice, and the later copy would override the
+kit's layers).
+
 ```css
-/* src/ui/styles.css */
+/* src/ui/styles.css — no `@import "tailwindcss"` here */
 @import "@xtandard/kit/ui/styles.css";
 
 :root {
