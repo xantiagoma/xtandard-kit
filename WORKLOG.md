@@ -82,3 +82,19 @@
 - The UI worker is on the site tooling, docs site and reusable workflows.
 - Started the webhooks migration **pilot** (t82) against a packed kit snapshot, to find kit API gaps
   before the first publish.
+
+## 2026-11-21: phase 3 done; READY TO PUBLISH
+
+- Merged:
+  - #12: the CLI passes sqlite/libsql table names;
+  - #13: `pgKvTable` `keyCollation`, `RedisLike` sorted-set commands;
+  - #14: site tooling, the kit docs site, reusable pages/docker/release-prepare workflows;
+  - #15: conformance capabilities must be declared, `fakeRedis` exported. Both came from the pilot's
+    feedback; #15 also found two kit suites that were silently skipping cases;
+  - #16: release v0.1.0 (version, CHANGELOG, first-publish steps in docs/RELEASES.md).
+- Pages is enabled (source: GitHub Actions). The site is live at
+  https://me.xantiagoma.com/xtandard-kit/: API reference, guides, ADRs, ecosystem.
+- On `main` at `e2dc9ad`: CI and Pages are green; `npm pack --dry-run` (0.1.0, 402 files, 654 kB)
+  and publint are clean.
+- All three build workers are done; their summaries are in `docs/research/build-{storage,server,ui}.md`.
+  The webhooks pilot (t82) continues on kit 0.1.0.
