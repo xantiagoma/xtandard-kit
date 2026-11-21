@@ -147,7 +147,8 @@ export function createIdGenerator<const Prefix extends string = string>(
   }
   const spec = SORTABLE[format];
   if (!spec) throw new TypeError(`createIdGenerator: unknown format "${String(format)}"`);
-  const clock = options.now ?? Date.now;
+  // Late-bound, so fake timers that swap the global `Date` (vi.setSystemTime) are honoured.
+  const clock = options.now ?? (() => Date.now());
   let lastTime = -1;
   let lastRandom: number[] = [];
 

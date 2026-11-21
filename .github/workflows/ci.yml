@@ -107,8 +107,16 @@ jobs:
           --health-retries 10
       clickhouse:
         image: ${{ inputs.clickhouse-image }}
+        env:
+          # Newer images refuse network access to a password-less `default` user.
+          CLICKHOUSE_PASSWORD: clickhouse
         ports:
           - 8123:8123
+        options: >-
+          --health-cmd "wget -qO- http://localhost:8123/ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
 
@@ -134,7 +142,11 @@ jobs:
             [ -n "$MONGO" ] && echo "MONGO_URL=mongodb://localhost:27017"
             [ -n "$POSTGRES" ] && echo "POSTGRES_URL=postgres://postgres:postgres@localhost:5432/$DB"
             [ -n "$MYSQL" ] && echo "MYSQL_URL=mysql://root:root@127.0.0.1:3306/$DB"
-            [ -n "$CLICKHOUSE" ] && echo "CLICKHOUSE_URL=http://localhost:8123"
+            if [ -n "$CLICKHOUSE" ]; then
+              echo "CLICKHOUSE_URL=http://localhost:8123"
+              echo "CLICKHOUSE_USER=default"
+              echo "CLICKHOUSE_PASSWORD=clickhouse"
+            fi
             echo "$EXTRA" | jq -r 'to_entries[] | "\(.key)=\(.value)"'
           } >> "$GITHUB_ENV"
 

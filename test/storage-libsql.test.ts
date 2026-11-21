@@ -152,3 +152,13 @@ describe("libsqlExecutor.atomic (product tables writing several rows)", () => {
     }
   });
 });
+
+test("a real @libsql/client Client satisfies LibsqlClientLike (the typed `client` option)", async () => {
+  const { createLibsqlStorage } = await import("../src/storage/libsql.ts");
+  const client: Client = createClient({ url: ":memory:" });
+  // Compile-time check: no cast. A regression here breaks every product's `client` option.
+  const storage = createLibsqlStorage({ client, table: "typed_client" });
+  await storage.setItem("k", 1);
+  expect(await storage.getItem("k")).toBe(1);
+  client.close();
+});

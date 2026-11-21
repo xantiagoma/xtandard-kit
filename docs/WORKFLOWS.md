@@ -20,6 +20,11 @@ uses: xantiagoma/xtandard-kit/.github/workflows/ci.yml@v0.1
 
 No secrets are needed: `GITHUB_TOKEN` and OIDC cover everything. Callers declare the permissions.
 
+Every workflow takes a `bun-version` input (default `1.3.14`, the pin in the kit's `mise.toml`). A
+product pinned to another Bun (links: `1.4.4`) passes its own, so CI runs the same Bun as local
+development. With `clickhouse-image` set, `ci.yml` starts ClickHouse with a CI-only password and a
+health check, and exports `CLICKHOUSE_URL`, `CLICKHOUSE_USER` and `CLICKHOUSE_PASSWORD`.
+
 ## `ci.yml`
 
 ```yaml

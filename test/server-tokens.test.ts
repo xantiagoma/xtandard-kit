@@ -269,3 +269,23 @@ describe("create signs the validated claims (audit feedback)", () => {
     expect((await tokens.verify("s", token, { now: 1 })).claims).toEqual({ tenant: "acme" });
   });
 });
+
+describe("default clock is late-bound (links feedback)", () => {
+  test("fake timers move token expiry and id time", async () => {
+    const { vi } = await import("vitest");
+    const { createIdGenerator } = await import("../src/util/id.ts");
+    const tokens = createScopedTokens({ prefix: "lvt_", ttl: "1d", validateClaims: (p) => p });
+    const ids = createIdGenerator({ format: "ulid" });
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(Date.UTC(2030, 0, 1));
+      const token = await tokens.create("s", { tenant: "t" });
+      expect((await tokens.verify("s", token)).expiresAt).toBe(Date.UTC(2030, 0, 2));
+      expect(ids.idTime(ids.newId("evt"))).toBe(Date.UTC(2030, 0, 1));
+      vi.setSystemTime(Date.UTC(2030, 0, 3));
+      await expect(tokens.verify("s", token)).rejects.toThrow(/expired/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});

@@ -457,7 +457,7 @@ export function syncSite(m: SiteManifest): SyncResult {
     return text;
   }
 
-  rmSync(publicDir, { recursive: true, force: true });
+  // Overwrite only the listed assets: a product may commit other files under site/public/.
   mkdirSync(publicDir, { recursive: true });
   for (const f of m.publicAssets) {
     const from = join(repoRoot, "docs/assets", f);

@@ -160,7 +160,8 @@ export function createScopedTokens<Claims extends object>(
   if (!prefix) throw new TypeError("createScopedTokens: a prefix is required");
   const label = options.label ?? "token";
   const errorName = options.errorName ?? "TokenError";
-  const clock = options.now ?? Date.now;
+  // Late-bound, so fake timers that swap the global `Date` (vi.setSystemTime) are honoured.
+  const clock = options.now ?? (() => Date.now());
   const defaultTtl = durationToMs(options.ttl);
 
   class ScopedTokenError extends TokenError {
