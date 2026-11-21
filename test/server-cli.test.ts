@@ -190,6 +190,7 @@ describe("storage from env", () => {
       mongoDb: "xtandard_webhooks",
       mongoCollection: "webhooks_queue",
       sqlitePath: "./.webhooks/queue.sqlite",
+      sqliteTable: "xtandard_webhooks",
       libsqlUrl: "file:./.webhooks/queue.db",
       fileDir: "./.webhooks/queue",
     },
@@ -216,6 +217,7 @@ describe("storage from env", () => {
       mongoDb: "xtandard_webhooks",
       mongoCollection: "webhooks_queue",
       sqlitePath: "./.webhooks/queue.sqlite",
+      sqliteTable: "xtandard_webhooks",
       libsqlUrl: "file:./.webhooks/queue.db",
       libsqlAuthToken: undefined,
       fileDir: "./.webhooks/queue",
@@ -233,6 +235,7 @@ describe("storage from env", () => {
         MONGO_DB: "d",
         QUEUE_MONGO_COLLECTION: "c",
         QUEUE_SQLITE_PATH: "s.sqlite",
+        QUEUE_SQLITE_TABLE: "st",
         LIBSQL_URL: "libsql://shared",
         LIBSQL_AUTH_TOKEN: "tok",
         QUEUE_FILE_DIR: "dir",
@@ -248,6 +251,7 @@ describe("storage from env", () => {
       mongoDb: "d",
       mongoCollection: "c",
       sqlitePath: "s.sqlite",
+      sqliteTable: "st",
       libsqlUrl: "libsql://shared",
       libsqlAuthToken: "tok",
       fileDir: "dir",
@@ -373,8 +377,11 @@ describe("storage from env", () => {
     await fresh.redis?.(config("redis"));
     await fresh["redis-json"]?.(config("redis-json"));
     expect(calls).toEqual([
-      ["sqlite", { path: "./.webhooks/queue.sqlite" }],
-      ["libsql", { url: "file:./.webhooks/queue.db", authToken: "tok" }],
+      ["sqlite", { path: "./.webhooks/queue.sqlite", table: "xtandard_webhooks" }],
+      [
+        "libsql",
+        { url: "file:./.webhooks/queue.db", authToken: "tok", table: "xtandard_webhooks" },
+      ],
       ["redis", { url: "redis://localhost:6379", prefix: "xtandard:webhooks:queue" }],
       ["redis-json", { url: "redis://localhost:6379", prefix: "xtandard:webhooks:queue" }],
     ]);

@@ -65,3 +65,31 @@ test("startServer uses Bun.serve under Bun, and the Node bridge on request", asy
     await server.stop();
   }
 });
+
+test("CLI default registry: sqlite uses the role's sqliteTable (bun:sqlite)", async () => {
+  const { mkdtemp } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { Database } = await import("bun:sqlite");
+  const { storageFromEnv } = await import("../src/cli/index.ts");
+  const dir = await mkdtemp(join(tmpdir(), "kit-bun-reg-"));
+  const path = join(dir, "webhooks.sqlite");
+  const role = {
+    name: "STORAGE",
+    defaults: { driver: "sqlite", sqlitePath: path, sqliteTable: "xtandard_webhooks" },
+  };
+  const storage = (await storageFromEnv({ role, env: {} })) as {
+    setItem(k: string, v: unknown): Promise<void>;
+    getItem(k: string): Promise<unknown>;
+    close?(): unknown;
+  };
+  await storage.setItem("apps:acme", { ok: true });
+  expect(await storage.getItem("apps:acme")).toEqual({ ok: true });
+  await storage.close?.();
+  const db = new Database(path, { readonly: true });
+  const tables = db.query("SELECT name FROM sqlite_master WHERE type = 'table'").all() as {
+    name: string;
+  }[];
+  db.close();
+  expect(tables.map((t) => t.name)).toEqual(["xtandard_webhooks"]);
+});

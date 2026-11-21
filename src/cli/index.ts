@@ -182,6 +182,12 @@ export interface StorageRoleDefaults {
   mongoCollection?: string;
   /** SQLite file (`<ROLE>_SQLITE_PATH`). */
   sqlitePath?: string;
+  /**
+   * Table of the `sqlite` and `libsql` drivers (`<ROLE>_SQLITE_TABLE`). Without
+   * it the drivers use the kit's neutral `xtandard_kv` and miss a product's
+   * existing rows.
+   */
+  sqliteTable?: string;
   /** libSQL URL (`<ROLE>_LIBSQL_URL`, then `LIBSQL_URL`). */
   libsqlUrl?: string;
   /** File-driver directory (`<ROLE>_FILE_DIR`). */
@@ -216,6 +222,8 @@ export interface StorageConfig {
   mongoDb: string | undefined;
   mongoCollection: string | undefined;
   sqlitePath: string | undefined;
+  /** `<ROLE>_SQLITE_TABLE`: the `sqlite` and `libsql` table. */
+  sqliteTable: string | undefined;
   libsqlUrl: string | undefined;
   /** `LIBSQL_AUTH_TOKEN`. */
   libsqlAuthToken: string | undefined;
@@ -289,11 +297,11 @@ export const defaultStorageRegistry: StorageRegistry = {
     ),
   sqlite: async (c) =>
     (await loadEntry("sqlite", () => import("../entry-storage-sqlite.ts"), "createSqliteStorage"))(
-      defined({ path: c.sqlitePath }),
+      defined({ path: c.sqlitePath, table: c.sqliteTable }),
     ),
   libsql: async (c) =>
     (await loadEntry("libsql", () => import("../entry-storage-libsql.ts"), "createLibsqlStorage"))(
-      defined({ url: c.libsqlUrl, authToken: c.libsqlAuthToken }),
+      defined({ url: c.libsqlUrl, authToken: c.libsqlAuthToken, table: c.sqliteTable }),
     ),
   postgres: async (c) =>
     (
@@ -378,6 +386,7 @@ export function resolveStorageConfig(
     mongoDb: opt("MONGO_DB", d.mongoDb),
     mongoCollection: opt(`${name}_MONGO_COLLECTION`, d.mongoCollection),
     sqlitePath: opt(`${name}_SQLITE_PATH`, d.sqlitePath),
+    sqliteTable: opt(`${name}_SQLITE_TABLE`, d.sqliteTable),
     libsqlUrl: opt(`${name}_LIBSQL_URL`, opt("LIBSQL_URL", d.libsqlUrl)),
     libsqlAuthToken: opt("LIBSQL_AUTH_TOKEN", undefined),
     fileDir: opt(`${name}_FILE_DIR`, d.fileDir),
@@ -396,8 +405,8 @@ export function resolveStorageConfig(
  *     name: "QUEUE",
  *     defaults: { prefix: "xtandard:webhooks:queue", pgTable: "xtandard_webhooks_queue",
  *       mongoDb: "xtandard_webhooks", mongoCollection: "webhooks_queue",
- *       sqlitePath: "./.webhooks/queue.sqlite", libsqlUrl: "file:./.webhooks/queue.db",
- *       fileDir: "./.webhooks/queue" },
+ *       sqlitePath: "./.webhooks/queue.sqlite", sqliteTable: "xtandard_webhooks",
+ *       libsqlUrl: "file:./.webhooks/queue.db", fileDir: "./.webhooks/queue" },
  *   },
  * });
  * ```
