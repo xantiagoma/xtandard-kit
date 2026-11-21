@@ -29,8 +29,11 @@ parseArgs(["serve", "--port=4000", "--readonly", "-t", "acme"], {
 - Short flags come from `short` (links); `-h`/`-v` are the default.
 - `boolean` flags never take a value, so `--help cmd` keeps `cmd` positional.
 - `--` ends the flags, and a malformed `--=x` stays positional (entitlements' guard).
-- A value that starts with `-` is read as the next flag, not as a value: `--limit -1` gives
-  `limit: true`. Pass negative numbers as `--limit=-1`.
+- Only `--…` and a configured short flag (`-t`) start a new flag, so `--limit -1`, `--value -5` and
+  `--reason -` keep their values.
+- `help` and `version` are boolean by default, so `--version 1` would not take a value. A CLI whose
+  commands use `--version <n>` passes `boolean: []` and handles `-h`/`-v` itself, or names them
+  in `short` only.
 
 ## `buildAuthFromEnv`
 

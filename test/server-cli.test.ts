@@ -65,6 +65,23 @@ describe("env / isTruthy", () => {
 });
 
 describe("parseArgs", () => {
+  it("negative numbers and a bare '-' are values; only --x and configured short flags are flags", () => {
+    expect(
+      parseArgs(
+        ["override", "--value", "-5", "--limit", "-1", "--reason", "-", "-t", "acme", "--x"],
+        {
+          short: { t: "tenant" },
+        },
+      ),
+    ).toEqual({
+      _: ["override"],
+      flags: { value: "-5", limit: "-1", reason: "-", tenant: "acme", x: true },
+    });
+    // An unconfigured short-looking token is a value too; a configured one still starts a flag.
+    expect(parseArgs(["--a", "-z"]).flags).toEqual({ a: "-z" });
+    expect(parseArgs(["--a", "-h"]).flags).toEqual({ a: true, help: true });
+  });
+
   it("long flags, = values, booleans and positionals", () => {
     expect(parseArgs(["serve", "--port", "4000", "--readonly", "--title=a=b", "extra"])).toEqual({
       _: ["serve", "extra"],
@@ -91,7 +108,7 @@ describe("parseArgs", () => {
       _: ["a", "--not-a-flag", "-h"],
       flags: {},
     });
-    expect(parseArgs(["--x", "-5"], { boolean: [] }).flags).toEqual({ x: true });
+    expect(parseArgs(["--x", "-5"], { boolean: [] }).flags).toEqual({ x: "-5" });
   });
 });
 
