@@ -1,6 +1,6 @@
 {
   "name": "@xtandard/kit",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "The shared building blocks of the xtandard products: KV storage contract, drivers and conformance suite, auth/authorization, HTTP panel plumbing, framework adapters, scoped tokens, CLI plumbing, the React admin shell, docs-site and build tooling.",
   "keywords": [
     "auth",
