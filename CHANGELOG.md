@@ -19,6 +19,8 @@ Fixes and additions found by migrating the five products onto the kit. Backwards
   not built" fallback page instead of the SPA, because `process.getBuiltinModule` is missing there.
   `resolveUiDir` and `isMainModule` now work without it.
 - **cli:** `isMainModule` compares a path it can't resolve as written, instead of returning `false`.
+- **cli:** `parseArgs` keeps negative numbers and a bare `-` as values (`--value -5`,
+  `--limit -1`, `--reason -`). Only `--…` and configured short flags start a new flag (en).
 - **storage/mongodb:** `isDuplicateKey` also recognises E11000 inside bulk-write `writeErrors`.
 - **tokens, util:** `createScopedTokens` and `createIdGenerator` read the clock late, so fake timers
   that swap the global `Date` (`vi.setSystemTime`) move token expiry and id time.
