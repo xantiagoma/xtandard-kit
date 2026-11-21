@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 import { createUnstorageStorage } from "../src/storage/unstorage.ts";
 import { runStorageConformance } from "../src/storage/testing/conformance.ts";
 import fixture from "./fixtures/stored-data/unstorage-keys.json" with { type: "json" };
+import strings from "./fixtures/stored-data/unstorage-strings.json" with { type: "json" };
 
 runStorageConformance(
   "unstorage (memory driver)",
@@ -60,5 +61,22 @@ describe("unstorage key encoding", () => {
     await storage.setItem("ent/s/a$b", 2); // current spelling, retires the en one
     expect(await storage.getKeys("ent/s/")).toEqual(["ent/s/a$b"]);
     expect(await storage.getItem("ent/s/a$b")).toBe(2);
+  });
+
+  test("stored-data fixture: legacy raw strings read back as older releases returned them", async () => {
+    const { raw, storage } = make();
+    for (const e of strings.entries) await raw.setItem(e.key, e.stored);
+    for (const e of strings.entries) expect(await storage.getItem(e.key)).toEqual(e.reads);
+  });
+
+  test("new strings are JSON-encoded, and a plain unstorage getItem (an older release) reads the original", async () => {
+    const { raw, storage } = make();
+    const values = ["hello", "123", "true", '{"a":1}', 'with "quotes" and \\ backslash', ""];
+    for (const [i, v] of values.entries()) await storage.setItem(`s/${i}`, v);
+    expect(await raw.getItemRaw("s/1")).toBe('"123"');
+    for (const [i, v] of values.entries()) {
+      expect(await raw.getItem(`s/${i}`)).toBe(v);
+      expect(await storage.getItem(`s/${i}`)).toBe(v);
+    }
   });
 });

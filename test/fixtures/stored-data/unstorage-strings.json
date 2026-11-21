@@ -1,0 +1,9 @@
+{
+  "description": "String values as product releases before the kit stored them through unstorage: verbatim, so unstorage's destr parsed JSON-looking strings on read. `reads` is what every release (and the kit) returns for that raw stored value; a JSON-looking legacy string keeps its legacy (parsed) reading.",
+  "entries": [
+    { "key": "whk/app/name", "stored": "hello", "reads": "hello" },
+    { "key": "whk/app/label", "stored": "café 🚀", "reads": "café 🚀" },
+    { "key": "flags/x/count", "stored": "123", "reads": 123 },
+    { "key": "lnk/x/on", "stored": "true", "reads": true }
+  ]
+}

@@ -124,6 +124,12 @@ spellings of keys containing `$` (raw, as wh/fl/au/li wrote them, and every-`$`-
 them), and writes retire the old spelling. No `compareAndSwap`: unstorage drivers have no atomic
 primitive.
 
+String values are written JSON-encoded (`"hello"` is stored as `"\"hello\""`): unstorage reads
+strings back through `destr`, which turned a stored `"123"` into the number `123` in every earlier
+release. A plain unstorage `getItem` (an older product release) still reads the original string.
+Strings stored verbatim by earlier releases read back exactly as those releases returned them,
+including that legacy parse (`"123"` → `123`).
+
 ### Cloudflare KV
 
 ```ts
