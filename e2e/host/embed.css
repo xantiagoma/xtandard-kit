@@ -1,0 +1,3 @@
+/* Scoped under .xtandard-kit-e2e by build-host.ts, like a product's dist/react.css. */
+@import "../../src/ui/styles.css";
+@source "./";
