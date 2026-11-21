@@ -1,0 +1,46 @@
+# ADR 0005 — Stored data stays compatible; encoding fixes read through legacy forms
+
+**Status:** Accepted
+
+---
+
+## Context
+
+The best driver copies (mostly en's) change some on-disk or on-wire representations compared with the
+older copies:
+- canonical JSON on write;
+- `$` escaping for unstorage;
+- empty-segment encoding for file keys.
+
+The copies also have different persisted defaults:
+- table names `xtandard_X` and `xtandard_X_kv`;
+- Mongo database and collection names;
+- the pg notify channel;
+- id formats: wh random base62, au/li ULID, en lowercase 22 characters.
+
+Users upgrade a product in place, over existing data.
+
+## Decision
+
+1. **Persisted defaults are product parameters** (ADR 0002): table, database, collection, channel,
+   key roots and id format. The kit has no defaults for these that a product relies on implicitly.
+2. **Encoding changes must read legacy data.**
+   - unstorage: encode **only a trailing `$`**, which is the case unstorage hides as a meta key.
+     Reads fall back to the raw legacy key when the encoded key is missing.
+   - file: empty segments are encoded as `%`. Keys without empty segments map to the same paths as
+     before.
+   - wh's `migrateFileStorage` and fl's legacy read-through remain available.
+3. **CAS stays correct on legacy values.** Writes are canonical. CAS first tries a single-statement
+   swap against the canonical form. On a miss, it reads the stored value, compares it structurally
+   (`deepEqual`, own properties), and, if they are equal, swaps conditionally on the **raw** stored
+   value, with bounded retries. This covers rows written before canonicalisation: SQLite text, and
+   Mongo BSON, where field order matters.
+4. DDL improvements are applied **only to new tables**: `COLLATE "C"` on pg keys, `utf8mb4_bin` on
+   MySQL. Existing tables keep working, because prefix queries add an exact `startsWith` post-filter.
+   Optional migration SQL is documented.
+
+## Consequences
+
+- Upgrading a product never makes existing keys unreadable or CAS operations fail permanently.
+- A conformance case writes non-canonical and legacy-encoded data directly through the backend, then
+  checks reads and CAS through the kit.
