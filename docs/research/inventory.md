@@ -294,3 +294,24 @@ All of these are now present in every copy that needs them:
    - React admin shell ✓ (shell + primitives; views stay in the products);
    - docs-site tooling ✓;
    - CI/release workflows ✓.
+
+## 5. Addendum: MySQL PAD SPACE key collisions (found while building the kit)
+
+**The bug.** `utf8mb4_bin` is a PAD SPACE collation, so on MySQL drizzle storage, keys that differ
+only by trailing spaces compare equal. This was confirmed on MySQL 8.4 in every copy:
+
+- `setItem("a ")` overwrites `"a"`;
+- `getItem`, `removeItem` and CAS act on the other spelling.
+
+**Which products let such a key reach storage** (code reading, 2026-11-21):
+
+| Product                    | Variable key segments                                                                                                     | A trailing space can reach storage?                                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| audit, links, entitlements | every segment goes through `encodeURIComponent` (`keys.ts`)                                                               | **no**: a space is stored as `%20`                                                                                                                                           |
+| webhooks                   | application keys and event types are validated on create (`KEY_REGEX`); idempotency keys are validated; ids are generated | **yes, through path parameters on existing resources**: `/applications/:key/...` is not re-validated on read, update or delete                                               |
+| flags                      | project and environment keys are validated on create; snapshot versions are generated                                     | **yes, through path parameters**. Example: `DELETE …/snapshots/v1%20` passes the "active snapshot is protected" check (`"v1 " !== "v1"`), then deletes the `v1` row on MySQL |
+
+- **Impact:** MySQL drizzle deployments only. The caller needs the same permission on the resource
+  anyway, unless a delegated per-app or per-project policy matches names loosely.
+- **Decision (t1r):** it ships with the migration. The kit's MySQL collision guard turns these
+  requests into a clear error. Products should also re-validate key-shaped path parameters.

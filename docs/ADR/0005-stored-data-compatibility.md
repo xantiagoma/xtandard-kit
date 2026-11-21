@@ -41,6 +41,19 @@ Users upgrade a product in place, over existing data.
    MySQL. Existing tables keep working, because prefix queries add an exact `startsWith` post-filter.
    Optional migration SQL is documented.
 
+5. **MySQL key collation.** `utf8mb4_bin` is PAD SPACE: keys that differ only by trailing spaces
+   collide, and indexed `LIKE` can skip supplementary characters. The kit's `mysqlKvTable` keeps
+   `utf8mb4_bin` as its **default**, with an opt-in `keyCollation` (`utf8mb4_0900_bin` on MySQL
+   8.0+, `utf8mb4_nopad_bin` on MariaDB). The reasons for keeping the default:
+   - the table factory is a schema declaration and cannot know the server, and MariaDB and MySQL 5.7
+     lack `utf8mb4_0900_bin`;
+   - changing the default would make drizzle-kit generate an `ALTER` for every existing user.
+
+   For safety on every table, the MySQL driver guards reads, deletes and swaps with
+   `BINARY key = BINARY ?`, and turns an upsert that would collide into a clear error. New
+   deployments are told, in docs, to use the NO PAD collation, with migration SQL for existing ones.
+   A product may switch its own default in a MINOR release, with a CHANGELOG Migration note.
+
 ## Consequences
 
 - Upgrading a product never makes existing keys unreadable or CAS operations fail permanently.
