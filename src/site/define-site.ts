@@ -16,7 +16,7 @@ import type { AstroUserConfig } from "astro";
 import { apiOverviews } from "./api-overviews.ts";
 import { isGroup, isPage, type SiteItem, type SiteManifest } from "./manifest.ts";
 import { importFromSite } from "./resolve.ts";
-import { createTypedocPlugin } from "./typedoc-plugin.ts";
+import { createTypedocPlugin, loadSiteModules } from "./typedoc-plugin.ts";
 
 type IntegrationFactory = (options: Record<string, unknown>) => unknown;
 
@@ -95,6 +95,8 @@ export interface SitePeers {
   createStarlightTypeDocPlugin: (typeof import("starlight-typedoc"))["createStarlightTypeDocPlugin"];
   linksValidator: IntegrationFactory;
   mermaid: IntegrationFactory;
+  /** The site's `typedoc` and `typescript`, for the TypeDoc plugin. */
+  typedoc: { typedoc: typeof import("typedoc"); typescript: typeof import("typescript") };
 }
 
 type Integration = NonNullable<AstroUserConfig["integrations"]>[number];
@@ -119,6 +121,8 @@ export async function defineXtandardSite(options: XtandardSiteOptions): Promise<
         (mod) => mod.default,
       ),
   ]);
+  // Loaded now, while the config is being evaluated (see TypedocPluginOptions.modules).
+  const typedocModules = peers.typedoc ?? (await loadSiteModules(m.siteDir));
   const entryPoints = orderedEntryPoints(m, options.apiOwners);
   const title = options.title ?? m.packageName;
   const socialImage = `${m.siteOrigin}${m.siteBase}/social.png`;
@@ -214,6 +218,7 @@ export async function defineXtandardSite(options: XtandardSiteOptions): Promise<
             plugin: [
               "typedoc-plugin-missing-exports",
               createTypedocPlugin(m.siteDir, {
+                modules: typedocModules,
                 moduleNames: Object.fromEntries(
                   m.apiEntries().map((e) => [join(m.repoRoot, e.source), e.name]),
                 ),

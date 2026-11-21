@@ -41,6 +41,7 @@ export {
 } from "./site/sync.ts";
 export {
   createTypedocPlugin,
+  loadSiteModules,
   readReexports,
   reexportsFile,
   type Reexport,

@@ -225,7 +225,7 @@ describe("defineXtandardSite", () => {
 
   it("assembles the Astro config from the injected integrations", async () => {
     const calls: Record<string, unknown> = {};
-    const peers: SitePeers = {
+    const peers: Partial<SitePeers> = {
       starlight: ((o: unknown) => ((calls.starlight = o), { name: "starlight" })) as never,
       createStarlightTypeDocPlugin: (() => [
         (o: unknown) => ((calls.typedoc = o), { name: "typedoc" }),

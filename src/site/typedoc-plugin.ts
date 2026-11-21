@@ -45,10 +45,30 @@ export function readReexports(siteDir: string): Reexport[] {
   return existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as Reexport[]) : [];
 }
 
+/** Import the site's `typedoc` and `typescript` (the instances starlight-typedoc uses). */
+export async function loadSiteModules(
+  siteDir: string,
+): Promise<{ typedoc: typeof import("typedoc"); typescript: typeof import("typescript") }> {
+  const [typedoc, tsModule] = await Promise.all([
+    importFromSite<typeof import("typedoc")>("typedoc", siteDir),
+    importFromSite<typeof import("typescript") & { default?: typeof import("typescript") }>(
+      "typescript",
+      siteDir,
+    ),
+  ]);
+  return { typedoc, typescript: tsModule.default ?? tsModule };
+}
+
 /** Options for {@link createTypedocPlugin}. */
 export interface TypedocPluginOptions {
   /** Module name per entry file (absolute path → `storage/redis`); see `manifest.apiEntries()`. */
   moduleNames?: Record<string, string>;
+  /**
+   * The site's `typedoc` and `typescript` modules, already imported. `defineXtandardSite` passes
+   * them, because a dynamic import inside the plugin can run after the loader that evaluated the
+   * Astro config has closed. Without them, the plugin imports both from the site when it loads.
+   */
+  modules?: { typedoc: typeof import("typedoc"); typescript: typeof import("typescript") };
 }
 
 /**
@@ -64,14 +84,7 @@ export function createTypedocPlugin(
   );
   return async function load(app: Application): Promise<void> {
     // The site's typedoc and typescript: the program's nodes come from that compiler instance.
-    const [typedoc, tsModule] = await Promise.all([
-      importFromSite<typeof import("typedoc")>("typedoc", siteDir),
-      importFromSite<typeof import("typescript") & { default?: typeof import("typescript") }>(
-        "typescript",
-        siteDir,
-      ),
-    ]);
-    const ts = tsModule.default ?? tsModule;
+    const { typedoc, typescript: ts } = options.modules ?? (await loadSiteModules(siteDir));
     const { Converter, ReflectionKind } = typedoc;
 
     /** The generated folder for each member kind (typedoc-plugin-markdown's defaults). */
