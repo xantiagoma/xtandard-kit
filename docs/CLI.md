@@ -70,6 +70,7 @@ const storage = await storageFromEnv<WebhooksStorage>({
       mongoDb: "xtandard_webhooks",
       mongoCollection: "webhooks_storage",
       sqlitePath: "./.webhooks/storage.sqlite",
+      sqliteTable: "xtandard_webhooks", // sqlite and libsql
       libsqlUrl: "file:./.webhooks/storage.db",
       fileDir: "./.webhooks/storage",
     },
@@ -83,7 +84,7 @@ The variable names are the products' own:
 - `REDIS_URL` and `<ROLE>_PREFIX`;
 - `DATABASE_URL` (falling back to `POSTGRES_URL`) and `<ROLE>_PG_TABLE`;
 - `MONGO_URL`, `MONGO_DB` and `<ROLE>_MONGO_COLLECTION`;
-- `<ROLE>_SQLITE_PATH`;
+- `<ROLE>_SQLITE_PATH`, and `<ROLE>_SQLITE_TABLE` for the `sqlite` and `libsql` table;
 - `<ROLE>_LIBSQL_URL` (falling back to `LIBSQL_URL`) and `LIBSQL_AUTH_TOKEN`;
 - `<ROLE>_FILE_DIR`.
 
@@ -97,6 +98,40 @@ Behaviour:
   `redis-json` and `unstorage`. They use the products' factory names and options
   (`createPostgresStorage({ connectionString, table })`…).
 - Pass `drivers` to add drivers or replace them, e.g. a product's counters.
+- Redis stores strings with `redis` and RedisJSON documents with `redis-json`. The value format is
+  chosen by the driver name.
+
+### Pass every persisted name
+
+The kit's drivers default to neutral names: the `xtandard_kv` table and channel, and no Redis
+prefix. A product CLI that leaves a name out would **silently write to the kit's default** and
+miss the data its earlier releases stored (ADR 0005). Use one of two approaches:
+
+1. **Role defaults.** Set every field a driver persists under: `prefix`, `pgTable`, `mongoDb`,
+   `mongoCollection`, `sqlitePath`, `sqliteTable`, `libsqlUrl` and `fileDir`. Use the exact values
+   the product's previous CLI used. The env vars still override them per deployment.
+2. **The product's own registry.** Pass `drivers` built from the product's wrapped factories,
+   which already default the names (`createPostgresStorage` from `@xtandard/webhooks/storage/postgres`):
+
+   ```ts
+   const drivers: StorageRegistry<WebhooksStorage> = {
+     ...defaultStorageRegistry, // or only the drivers the product supports
+     postgres: async (c) =>
+       (await import("./storage/postgres.ts")).createPostgresStorage({
+         connectionString: c.postgresUrl,
+         ...(c.pgTable ? { table: c.pgTable } : {}),
+       }),
+   };
+   ```
+
+`test/server-cli-registry.test.ts` and `test/server.bun.test.ts` check, against the real drivers,
+that the role defaults reach them:
+
+- the file directory;
+- the libSQL and SQLite tables;
+- the Postgres table;
+- the Mongo database and collection;
+- the Redis prefix, plus string vs RedisJSON.
 
 `describeStorage(role)` gives the banner line:
 
