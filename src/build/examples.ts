@@ -26,8 +26,13 @@ export interface ExampleConfig {
   kind: "server" | "script";
   /** Command for the interactive run (in the example dir). */
   run: string[];
-  /** Command for the non-interactive demo (in the example dir). Exits 0 on success. */
-  demo: string[];
+  /**
+   * Command for the non-interactive demo (in the example dir). Exits 0 on success. Without one, the
+   * example has no demo: `<name> --demo` fails and `all --demo` skips it.
+   */
+  demo?: string[];
+  /** Command run once before the interactive run (in the example dir), e.g. seeding data. */
+  seed?: string[];
   /** `bun install` the example on first use: always, or only for the interactive run. */
   install?: "always" | "run";
   /** Preferred port for server examples; a nearby free one is used if taken. */
@@ -125,7 +130,18 @@ export function createExampleRunner(
     if (cfg.note) log(`ℹ︎  ${name}: ${cfg.note}`);
     const installed = await ensureInstalled(name, cfg, demo);
     if (installed !== 0) return installed;
-    if (demo) return sh(cfg.demo, cfg.dir);
+    if (demo) {
+      if (!cfg.demo) {
+        error(`Example "${name}" has no non-interactive demo.`);
+        return 1;
+      }
+      return sh(cfg.demo, cfg.dir);
+    }
+    if (cfg.seed) {
+      log(`Seeding ${name} …`);
+      const seeded = await sh(cfg.seed, cfg.dir);
+      if (seeded !== 0) return seeded;
+    }
 
     const env: Record<string, string> = {};
     if (cfg.kind === "server") {
@@ -145,6 +161,7 @@ export function createExampleRunner(
     // Sequential: the demos share nothing, but sequential output reads better.
     const failed: string[] = [];
     for (const key of Object.keys(examples)) {
+      if (!examples[key]!.demo) continue; // no non-interactive demo
       log(`\n━━━ ${key} ━━━`);
       if ((await runExample(key, true)) !== 0) failed.push(key);
     }
