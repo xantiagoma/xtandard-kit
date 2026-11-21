@@ -1,6 +1,6 @@
 /**
  * Importing a storage subpath must never load its optional peer: every peer is imported lazily on
- * first use (ADR 0001). Each entry is bundled with every package left external and imported by
+ * first use (ADR 0001). Each entry is bundled (esbuild) with every package left external and imported by
  * plain `node` from a directory with no `node_modules`, so a top-level peer import fails to
  * resolve. When `dist/` exists (after `bun run build`), the published files are checked the same
  * way.
@@ -55,13 +55,17 @@ describe("storage subpaths import under plain node with no peers installed", () 
       const dir = await mkdtemp(join(tmpdir(), "kit-node-import-"));
       dirs.push(dir);
       const out = join(dir, `${entry}.mjs`);
+      // esbuild (vite's own bundler): Bun's bundler mis-handles these re-exports in some releases
+      // (1.3.x: "Export … is not defined in module").
       execFileSync(
-        "bun",
+        join(root, "node_modules/.bin/esbuild"),
         [
-          "build",
           join(root, `src/entry-${entry}.ts`),
-          "--target=node",
+          "--bundle",
+          "--platform=node",
+          "--format=esm",
           "--packages=external",
+          "--log-level=error",
           `--outfile=${out}`,
         ],
         { cwd: root, stdio: "pipe" },
