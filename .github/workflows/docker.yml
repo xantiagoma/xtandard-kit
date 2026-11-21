@@ -1,0 +1,148 @@
+# Reusable Docker image build, smoke test and push to GHCR (ADR 0009). The image is built and
+# smoke-tested locally first; it is pushed only when the smoke test passes.
+#
+#   on:
+#     push: { branches: [main], tags: ["v*"] }
+#     workflow_dispatch:
+#       inputs:
+#         refresh-kit: { type: boolean, default: false }
+#   jobs:
+#     docker:
+#       uses: xantiagoma/xtandard-kit/.github/workflows/docker.yml@v0.1
+#       permissions: { contents: read, packages: write }
+#       with:
+#         refresh-kit: ${{ inputs.refresh-kit || false }}
+#
+# Images bundle their dependencies, and the lockfile pins the kit, so a kit patch reaches an image
+# only when it is rebuilt (ADR 0007). For a kit security fix, run the caller's workflow_dispatch
+# with `refresh-kit: true`: `bun update @xtandard/kit` runs before the build.
+name: Docker (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      dockerfile:
+        type: string
+        default: "apps/standalone/Dockerfile"
+      context:
+        type: string
+        default: "."
+      image-name:
+        description: "Image name; ghcr.io/<owner>/<repo> by default."
+        type: string
+        default: ""
+      smoke-paths:
+        description: "Space-separated paths that must answer 2xx (e.g. `/healthcheck /` or `/links/ /links/api/openapi.json`)."
+        type: string
+        default: "/healthcheck /"
+      smoke-env:
+        description: "Space-separated KEY=VALUE pairs for the smoke container."
+        type: string
+        default: "AUTH_MODE=none"
+      port:
+        description: "The container port the server listens on."
+        type: number
+        default: 3000
+      refresh-kit:
+        description: "Run `bun update @xtandard/kit` before the build, to pick up a kit patch."
+        type: boolean
+        default: false
+      push:
+        description: "Push to GHCR after the smoke test (false = build and smoke only)."
+        type: boolean
+        default: true
+      bun-version:
+        type: string
+        default: "1.3.14"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun (refresh-kit)
+        if: inputs.refresh-kit
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+      - name: bun update @xtandard/kit
+        if: inputs.refresh-kit
+        run: |
+          bun update @xtandard/kit
+          bun pm ls | grep '@xtandard/kit' || true
+
+      - name: Image name
+        id: name
+        env:
+          NAME: ${{ inputs.image-name }}
+        run: |
+          name="${NAME:-ghcr.io/${GITHUB_REPOSITORY}}"
+          echo "image=${name,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build (for the smoke test)
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.dockerfile }}
+          load: true
+          tags: xtandard-smoke:local
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test
+        env:
+          PATHS: ${{ inputs.smoke-paths }}
+          SMOKE_ENV: ${{ inputs.smoke-env }}
+          PORT: ${{ inputs.port }}
+        run: |
+          args=()
+          for kv in $SMOKE_ENV; do args+=(-e "$kv"); done
+          docker run -d --rm -p "3000:${PORT}" "${args[@]}" --name xtandard-smoke xtandard-smoke:local
+          trap 'docker logs xtandard-smoke || true; docker stop xtandard-smoke || true' EXIT
+          first="${PATHS%% *}"
+          for _ in $(seq 1 30); do
+            if curl -sf -o /dev/null "localhost:3000${first}"; then break; fi
+            sleep 1
+          done
+          for p in $PATHS; do
+            echo "GET ${p}"
+            curl -sf -o /dev/null "localhost:3000${p}"
+          done
+
+      - name: Log in to GHCR
+        if: inputs.push
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        if: inputs.push
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.name.outputs.image }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-
+            type=semver,pattern=v{{version}}
+
+      - name: Push
+        if: inputs.push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.context }}
+          file: ${{ inputs.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,0 +1,82 @@
+# Reusable docs-site build + GitHub Pages deploy (ADR 0009). The site is an Astro Starlight site
+# built on @xtandard/kit/site, with its own package.json and lockfile in `site-dir`.
+#
+#   jobs:
+#     pages:
+#       uses: xantiagoma/xtandard-kit/.github/workflows/pages.yml@v0.1
+#       permissions: { contents: read, pages: write, id-token: write }
+#
+# Callers keep their own triggers and `paths` filter. Pull requests build and check the site
+# (broken links fail) without deploying. Prerequisite (owner, once): Settings → Pages → Source:
+# "GitHub Actions".
+name: Pages (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      bun-version:
+        type: string
+        default: "1.3.14"
+      site-dir:
+        description: "The site directory (its own package.json and lockfile)."
+        type: string
+        default: "site"
+      prebuild:
+        description: "A command run at the repo root after install, before the site (e.g. `bun run build` when the site links the package with file:..)."
+        type: string
+        default: ""
+      deploy:
+        description: "Deploy to Pages (ignored on pull requests)."
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+      - name: Pages origin and base path
+        id: pages
+        if: github.event_name != 'pull_request' && inputs.deploy
+        uses: actions/configure-pages@v5
+      # The root install provides the library's dependencies and peers (types for the API
+      # reference); the site has its own lockfile.
+      - run: bun install --frozen-lockfile
+      - name: Prebuild
+        if: inputs.prebuild != ''
+        env:
+          PREBUILD: ${{ inputs.prebuild }}
+        run: bash -c "$PREBUILD"
+      - run: bun install --frozen-lockfile
+        working-directory: ${{ inputs.site-dir }}
+      - name: Build the site (fails on a broken link)
+        working-directory: ${{ inputs.site-dir }}
+        env:
+          # Empty on pull requests: the manifest's defaults apply.
+          SITE_ORIGIN: ${{ steps.pages.outputs.origin }}
+          SITE_BASE: ${{ steps.pages.outputs.base_path }}
+        run: bun run build
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request' && inputs.deploy
+        with:
+          path: ${{ inputs.site-dir }}/dist
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && inputs.deploy
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

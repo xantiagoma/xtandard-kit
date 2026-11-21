@@ -1,0 +1,138 @@
+# Reusable release preparation (ADR 0009): checks out the tag, runs the gate, builds, runs
+# publint, packs the tarball and extracts the release notes from CHANGELOG.md. It uploads two
+# artifacts, `package` (the .tgz) and `release-notes` (notes.md).
+#
+# It does NOT publish. npm trusted publishing validates the *calling* workflow, so each repo keeps a
+# small release.yml that calls this, then runs `npm publish --provenance` on the tarball itself and
+# creates the GitHub release (see the kit's kit-release.yml):
+#
+#   jobs:
+#     prepare:
+#       uses: xantiagoma/xtandard-kit/.github/workflows/release-prepare.yml@v0.1
+#       with: { tag: "${{ inputs.tag || github.ref_name }}" }
+#     publish:
+#       needs: prepare
+#       …  # download `package`, npm publish --provenance, gh release create
+name: Release prepare (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "The tag to release (e.g. v0.1.2)."
+        type: string
+        required: true
+      bun-version:
+        type: string
+        default: "1.3.14"
+      node-version:
+        type: string
+        default: "24"
+      check:
+        description: "Run `bun run check`."
+        type: boolean
+        default: true
+      test:
+        description: "Run `bun run test` (live backends are skipped without their URLs)."
+        type: boolean
+        default: true
+      test-bun:
+        description: "Run `bun run test:bun`."
+        type: boolean
+        default: true
+    outputs:
+      version:
+        description: "The package version (the tag without its v)."
+        value: ${{ jobs.prepare.outputs.version }}
+      tarball:
+        description: "The tarball's file name inside the `package` artifact."
+        value: ${{ jobs.prepare.outputs.tarball }}
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tarball: ${{ steps.pack.outputs.tarball }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag }}
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: The tag matches package.json
+        id: version
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          if [ "v${version}" != "${TAG}" ]; then
+            echo "::error::tag ${TAG} does not match package.json version ${version}"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Check
+        if: inputs.check
+        run: bun run check
+
+      - name: Test
+        if: inputs.test
+        run: bun run test
+
+      - name: Test (bun)
+        if: inputs.test-bun
+        run: bun run test:bun
+
+      - name: Build
+        run: bun run build
+
+      - name: publint
+        run: bunx publint
+
+      - name: Pack
+        id: pack
+        run: |
+          mkdir -p pack
+          tarball=$(npm pack --pack-destination pack --silent | tail -n 1)
+          echo "tarball=${tarball}" >> "$GITHUB_OUTPUT"
+          ls -l pack
+
+      # The tag's CHANGELOG.md section plus a compare link (`--generate-notes` only lists merged
+      # PRs; changelogen releases are direct pushes).
+      - name: Release notes
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          awk -v h="## ${TAG}" '$0 == h { on = 1; next } on && /^## / { exit } on' CHANGELOG.md > notes.md
+          PREV=$(git describe --tags --abbrev=0 --match 'v*.*.*' "${TAG}^" 2>/dev/null || true)
+          if [ -n "${PREV}" ]; then
+            printf '\n**Full Changelog**: %s/%s/compare/%s...%s\n' \
+              "${GITHUB_SERVER_URL}" "${GITHUB_REPOSITORY}" "${PREV}" "${TAG}" >> notes.md
+          fi
+          cat notes.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: pack/*.tgz
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: notes.md
