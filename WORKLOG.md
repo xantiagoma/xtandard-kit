@@ -54,3 +54,31 @@
   - `kit-build-ui` (t71): UI kit, build tooling, site and workflows.
 
   Briefs live in the session scratchpad (BUILD-\*.md).
+
+## 2026-11-21: phase 3 areas landing; webhooks pilot started
+
+- Merged after review, with CI green each time:
+  - #1 auth, authz, hooks, util, tokens (verifies each product's frozen portal tokens);
+  - #2 storage contract, memory/file/unstorage/cf-kv, conformance suite, stored-data fixtures;
+  - #3 UI kit + embed;
+  - #4 server panel, plumbing, router, OpenAPI (`*TokenError` → 401 cross-bundle);
+  - #5 SQL drivers + drizzle (MySQL emoji range-scan fix);
+  - #6 build tooling, api-surface, UI e2e;
+  - #8 mongodb + redis;
+  - #9 adapters + CLI;
+  - #10 MySQL PAD SPACE guard, `KeyCollisionError`, opt-in NO PAD collation;
+  - #11 a comment-only change.
+- Product bugs found while building, all shipping with the migration (t1r agreed):
+  - MySQL indexed `LIKE` skips emoji keys;
+  - unstorage `"123"` → `123`;
+  - MySQL PAD SPACE trailing-space key collisions. The per-product check found audit, links and
+    entitlements safe (`encodeURIComponent`); webhooks and flags reach storage through path params.
+    Recorded in inventory §5 and ADR 0005 item 5.
+- Lead-side changes on main: peers for build/site, `starlight-typedoc`, `esbuild`, `astro-mermaid`,
+  `starlight-links-validator`. Workers must gate under bun 1.3.14 (`mise x`); local shells default to
+  1.4.4.
+- The storage worker is done (`docs/research/build-storage.md`).
+- The server worker is doing a CLI follow-up: sqlite/libsql table defaults in the default registry.
+- The UI worker is on the site tooling, docs site and reusable workflows.
+- Started the webhooks migration **pilot** (t82) against a packed kit snapshot, to find kit API gaps
+  before the first publish.
