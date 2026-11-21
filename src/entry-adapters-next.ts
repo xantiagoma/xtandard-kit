@@ -1,7 +1,8 @@
 /**
- * `@xtandard/kit/adapters/next` — not implemented yet.
+ * `@xtandard/kit/adapters/next` — `toNextHandler(panel)`: the method exports
+ * of a Next.js App Router catch-all route.
  *
  * @module
  */
 
-export {};
+export { toNextHandler, type NextRouteHandler, type NextRouteHandlers } from "./adapters/next.ts";
