@@ -5,6 +5,31 @@ MINOR bump is breaking, a PATCH bump is a fix or a backwards-compatible addition
 entry names the products it affects: wh = webhooks, fl = flags, au = audit, li = links,
 en = entitlements.
 
+## v0.1.1
+
+Fixes and additions found by migrating webhooks and flags onto the kit. Backwards compatible.
+
+### Fixed
+
+- **file storage, `legacy: "read-through"` (fl):** a key whose raw segments are valid encoded names
+  (`x/a%25/k`, `x/^a`) could read or delete another key's file (`x/a%/k`, `x/A`). The read-through
+  path is now used only when it is unambiguous, and the conformance suite also runs in read-through
+  mode.
+- **server, Node 20.0–20.15** (wh, fl, au, li, en; `engines` allow Node 20): the panel served the "UI
+  not built" fallback page instead of the SPA, because `process.getBuiltinModule` is missing there.
+  `resolveUiDir` and `isMainModule` now work without it.
+- **cli:** `isMainModule` compares a path it can't resolve as written, instead of returning `false`.
+
+### Added
+
+- **storage:** a `subpath` option on the sqlite, libsql, postgres, mongodb, redis and drizzle
+  factories, so errors (a missing peer, a missing `client`/`url`…) name the product's import path.
+- **cli:** `storageRegistryFrom(loaders)` builds a CLI storage registry over a product's own entry
+  modules, so capability layers and persisted defaults survive. `isMainModule(import.meta.url)`
+  accepts a URL (a bare `import.meta` warns in CJS builds).
+- **util:** `validateKeySegment(value, path, { maxLength })`.
+- **build:** the example runner gets a `seed` step, and `demo` is optional.
+
 ## v0.1.0
 
 The first release: one implementation of the infrastructure the five xtandard products copied from
