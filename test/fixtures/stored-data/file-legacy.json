@@ -1,0 +1,25 @@
+{
+  "whk/Acme/endpoints/ep_1": {
+    "id": "ep_1",
+    "url": "https://acme.example/hook",
+    "enabled": true
+  },
+  "whk/Acme/applications/Acme": {
+    "key": "Acme",
+    "name": "Acme Inc."
+  },
+  "flags/default/Production/snapshots/v 1": {
+    "version": 1,
+    "flags": {
+      "b": 2,
+      "a": 1
+    }
+  },
+  "flags/default/café/flags/new-ui": {
+    "key": "new-ui",
+    "on": false
+  },
+  "whk/app/endpoints/ep_3": {
+    "id": "ep_3"
+  }
+}
