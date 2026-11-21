@@ -14,6 +14,7 @@ import {
   affectedRows,
   createDrizzleStorage,
   detectDrizzleDialect,
+  prefixSuccessor,
 } from "../src/storage/drizzle.ts";
 import { runStorageConformance } from "../src/storage/testing/conformance.ts";
 import { createTableSql, pglite, uniqueTable } from "./drizzle-helpers.ts";
@@ -177,5 +178,16 @@ describe("drizzle table factories", () => {
       ["key", "text"],
       ["value", "text"],
     ]);
+  });
+});
+
+describe("prefixSuccessor (MySQL prefix range)", () => {
+  test("increments the last code point, skipping surrogates and dropping U+10FFFF", () => {
+    expect(prefixSuccessor("kit/u/")).toBe("kit/u0");
+    expect(prefixSuccessor("a🚀")).toBe("a🚁");
+    expect(prefixSuccessor("a\u{d7ff}")).toBe("a\u{e000}");
+    expect(prefixSuccessor("a\u{10ffff}")).toBe("b");
+    expect(prefixSuccessor("\u{10ffff}")).toBeUndefined();
+    expect(prefixSuccessor("")).toBeUndefined();
   });
 });

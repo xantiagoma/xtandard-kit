@@ -5,9 +5,10 @@
  *
  * Postgres, MySQL and SQLite: the dialect is read from `db`, or set with `dialect`.
  *
- * - `getKeys` matches prefixes literally: `LIKE … ESCAPE '!'` on Postgres/MySQL (a backslash
- *   escape is a syntax error on MySQL), `GLOB` on SQLite (whose `LIKE` folds ASCII case), plus an
- *   exact `startsWith` filter.
+ * - `getKeys` matches prefixes literally: `LIKE … ESCAPE '!'` on Postgres, `GLOB` on SQLite (whose
+ *   `LIKE` folds ASCII case), and a bytewise range `key >= p AND key < successor(p)` on MySQL (whose
+ *   range optimizer skips emoji for an indexed `LIKE 'p%'` on a `utf8mb4_bin` key), plus an exact
+ *   `startsWith` filter everywhere.
  * - Values are written canonically and read as raw JSON text, parsed once (so a stored string that
  *   looks like JSON stays a string).
  * - `compareAndSwap` is one conditional `UPDATE` (or a conflict-ignoring `INSERT` for an absent
@@ -121,6 +122,23 @@ export function drizzleSql(): Promise<SqlTag> {
   return sqlTag;
 }
 
+/**
+ * The smallest string greater than every string that starts with `prefix`, in code-point (=
+ * `utf8mb4_bin` byte) order: the last code point incremented (skipping surrogates), dropping
+ * trailing U+10FFFF. `undefined` when there is none (empty prefix, or all U+10FFFF).
+ */
+export function prefixSuccessor(prefix: string): string | undefined {
+  const points = [...prefix].map((c) => c.codePointAt(0)!);
+  while (points.length > 0) {
+    const last = points.pop()!;
+    if (last < 0x10ffff) {
+      points.push(last === 0xd7ff ? 0xe000 : last + 1);
+      return String.fromCodePoint(...points);
+    }
+  }
+  return undefined;
+}
+
 /** Options for {@link createDrizzleStorage}. */
 export interface DrizzleStorageOptions {
   /** Your Drizzle database (node-postgres, postgres-js, mysql2, bun:sqlite, libsql, pglite, …). */
@@ -195,10 +213,17 @@ export function createDrizzleStorage(options: DrizzleStorageOptions): DrizzleKvS
 
     async getKeys(prefix: string): Promise<string[]> {
       const sql = await drizzleSql();
+      const upper = dialect === "mysql" ? prefixSuccessor(prefix) : undefined;
       const where =
         dialect === "sqlite"
           ? sql`${table.key} glob ${`${escapeGlob(prefix)}*`}`
-          : sql`${table.key} like ${`${escapeLike(prefix)}%`} escape '!'`;
+          : dialect === "mysql"
+            ? // MySQL's range optimizer skips supplementary characters (emoji) for an indexed
+              // `LIKE 'p%'` on a utf8mb4_bin key: match the bytewise range instead.
+              upper === undefined
+              ? sql`${table.key} >= ${prefix}`
+              : sql`${table.key} >= ${prefix} and ${table.key} < ${upper}`
+            : sql`${table.key} like ${`${escapeLike(prefix)}%`} escape '!'`;
       const rows = (await db.select({ key: table.key }).from(table).where(where)) as Array<{
         key: unknown;
       }>;
