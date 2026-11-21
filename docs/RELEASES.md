@@ -42,6 +42,37 @@ described in [Reusable workflows](WORKFLOWS.md).
    gh workflow run kit-release.yml -f tag=v0.1.2
    ```
 
+## First publish (v0.1.0, one time, by the owner)
+
+npm trusted publishing can only be configured for a package that already exists, so the very first
+version is published by hand (with 2FA) and the workflow takes over afterwards:
+
+1. **Publish from `main`** at the release commit, with a clean tree:
+
+   ```sh
+   git checkout main && git pull
+   bun install --frozen-lockfile && bun run build && bunx publint
+   npm publish --access public          # prompts for the 2FA code; no provenance from a laptop
+   ```
+
+2. **Configure trusted publishing** (one time; npm >= 11.5.1):
+
+   ```sh
+   npm trust github @xtandard/kit --repo xantiagoma/xtandard-kit --file kit-release.yml
+   ```
+
+3. **Tag it, so the workflow records the release:**
+
+   ```sh
+   git tag v0.1.0 && git push origin v0.1.0
+   ```
+
+   `kit-release.yml` runs the gate, sees `0.1.0` already on npm and skips the publish, creates the
+   GitHub release from the CHANGELOG, and creates the `v0.1` tag that products' workflow references
+   use.
+
+From then on every release is the normal flow above, published from CI with provenance.
+
 ## npm trusted publishing (one-time setup)
 
 Publishing uses OIDC; there is no `NPM_TOKEN`. On npmjs.com, the package's trusted publisher is this
