@@ -27,6 +27,10 @@ const ENTRIES = [
   "storage-postgres-internals",
   "storage-drizzle",
   "storage-drizzle-internals",
+  "storage-mongodb",
+  "storage-mongodb-internals",
+  "storage-redis",
+  "storage-redis-internals",
 ];
 
 const root = resolve(import.meta.dirname, "..");

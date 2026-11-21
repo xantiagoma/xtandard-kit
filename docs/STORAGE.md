@@ -45,17 +45,19 @@ export { isWatchable, isCompareAndSwap, requirePeer } from "@xtandard/kit/storag
 
 ## Drivers
 
-| Subpath                                         | Factory                                                             | Peer                                              | watch                              | CAS                   | Extension points (ADR 0004)  |
-| ----------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------- | --------------------- | ---------------------------- |
-| `storage/memory`                                | `createMemoryStorage`                                               | —                                                 | ✓                                  | ✓                     | `onWrite`                    |
-| `storage/file`                                  | `createFileStorage`                                                 | —                                                 | ✓ (`fs.watch`)                     | ✓ (in-process)        | —                            |
-| `storage/unstorage`                             | `createUnstorageStorage`                                            | `unstorage`                                       | via `withWatch`                    | —                     | —                            |
-| `storage/cloudflare-kv`                         | `createCloudflareKvStorage`                                         | — (a binding)                                     | via `withWatch`                    | —                     | —                            |
-| `storage/sqlite`                                | `createSqliteStorage`                                               | — (`bun:sqlite`, Bun only)                        | via `withWatch`                    | ✓                     | `storage/sqlite/internals`   |
-| `storage/libsql`                                | `createLibsqlStorage`                                               | `@libsql/client`                                  | via `withWatch`                    | ✓                     | `storage/libsql/internals`   |
-| `storage/postgres`                              | `createPostgresStorage`, `postgresStorageSchema`                    | `pg` (only for a connection string)               | via `withWatch` + `pgListenNotify` | ✓                     | `storage/postgres/internals` |
-| `storage/drizzle`                               | `createDrizzleStorage`                                              | `drizzle-orm`                                     | via `withWatch`                    | ✓ (pg, mysql, sqlite) | `storage/drizzle/internals`  |
-| `drizzle/pg`, `drizzle/mysql`, `drizzle/sqlite` | `pgKvTable`, `mysqlKvTable`, `sqliteKvTable`, `textC`, `binVarchar` | `drizzle-orm` (**required**: imported statically) | —                                  | —                     | —                            |
+| Subpath                                         | Factory                                                             | Peer                                              | watch                              | CAS                   | Extension points (ADR 0004)          |
+| ----------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------- | --------------------- | ------------------------------------ |
+| `storage/memory`                                | `createMemoryStorage`                                               | —                                                 | ✓                                  | ✓                     | `onWrite`                            |
+| `storage/file`                                  | `createFileStorage`                                                 | —                                                 | ✓ (`fs.watch`)                     | ✓ (in-process)        | —                                    |
+| `storage/unstorage`                             | `createUnstorageStorage`                                            | `unstorage`                                       | via `withWatch`                    | —                     | —                                    |
+| `storage/cloudflare-kv`                         | `createCloudflareKvStorage`                                         | — (a binding)                                     | via `withWatch`                    | —                     | —                                    |
+| `storage/sqlite`                                | `createSqliteStorage`                                               | — (`bun:sqlite`, Bun only)                        | via `withWatch`                    | ✓                     | `storage/sqlite/internals`           |
+| `storage/libsql`                                | `createLibsqlStorage`                                               | `@libsql/client`                                  | via `withWatch`                    | ✓                     | `storage/libsql/internals`           |
+| `storage/postgres`                              | `createPostgresStorage`, `postgresStorageSchema`                    | `pg` (only for a connection string)               | via `withWatch` + `pgListenNotify` | ✓                     | `storage/postgres/internals`         |
+| `storage/drizzle`                               | `createDrizzleStorage`                                              | `drizzle-orm`                                     | via `withWatch`                    | ✓ (pg, mysql, sqlite) | `storage/drizzle/internals`          |
+| `storage/mongodb`                               | `createMongoStorage`                                                | `mongodb`                                         | via `withWatch`                    | ✓                     | `storage/mongodb/internals`          |
+| `storage/redis`                                 | `createRedisStorage`, `createRedisJSONStorage`                      | `redis`                                           | ✓ (keyspace notifications)         | ✓                     | `onWrite`, `storage/redis/internals` |
+| `drizzle/pg`, `drizzle/mysql`, `drizzle/sqlite` | `pgKvTable`, `mysqlKvTable`, `sqliteKvTable`, `textC`, `binVarchar` | `drizzle-orm` (**required**: imported statically) | —                                  | —                     | —                                    |
 
 Conventions shared by every driver:
 
@@ -220,6 +222,49 @@ const storage = createDrizzleStorage({ db: drizzle(pool), table: kv }); // diale
   ALTER TABLE xtandard_kv MODIFY `key` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL;
   ```
 
+### MongoDB
+
+```ts
+import { createMongoStorage } from "@xtandard/kit/storage/mongodb";
+
+const storage = createMongoStorage({
+  url: process.env.MONGO_URL,
+  dbName: "xtandard_webhooks",
+  collectionName: "webhooks_kv",
+});
+```
+
+One `{ _id: key, value }` collection (defaults `"xtandard"` / `"kv"`; products pass theirs). Values
+are written with sorted fields because BSON equality is field-order sensitive. `compareAndSwap` is
+one `updateOne` with `$expr` + `$literal` (a value with `$`-prefixed keys stays data); a document
+written before canonicalisation is swapped through the structural fallback. `getKeys` re-checks
+`startsWith`, so a case-insensitive collection collation never leaks keys. No `watch` (change
+streams need a replica set). A failed connect is retried.
+
+### Redis and RedisJSON
+
+```ts
+import { createRedisJSONStorage, createRedisStorage } from "@xtandard/kit/storage/redis";
+
+const storage = createRedisStorage({
+  url: process.env.REDIS_URL,
+  prefix: "app",
+  onError: console.error,
+});
+const docs = createRedisJSONStorage({ url: process.env.REDIS_URL, prefix: "app" }); // Redis 8 / Stack
+```
+
+- `prefix` is joined with `:` and stripped from `getKeys`. Never point both variants at the same keys.
+- `getKeys` uses `SCAN` with the prefix glob-escaped, **de-duplicated** (SCAN may return a key twice).
+- `watch` uses keyspace notifications on a glob-escaped `PSUBSCRIBE` pattern. The server needs
+  `notify-keyspace-events` (e.g. `KEA`).
+- `compareAndSwap` is a Lua script that compares the stored text with the canonical JSON of
+  `expected` as **strings** (the copies decoded both with `cjson`, which cannot tell `{}` from
+  `[]`). On a miss it reads the raw text, compares structurally in JS and swaps on the exact raw
+  text, so values written before canonicalisation, or serialized differently by RedisJSON, swap too.
+- `onWrite(key, value | null, { client, redisKey, toRedisKey })` runs after every successful write,
+  swap and remove.
+
 ## Change notifications: `withWatch` and `pgListenNotify`
 
 `withWatch(storage, subscribe)` adds `watch` to any storage from a change source you already have.
@@ -254,8 +299,24 @@ it (`{ ...withWatch(s, sub) }`) keeps the methods.
 Product capabilities (`claimDue`, the event log, counters) are built on top of the drivers, never by
 forking them.
 
-- **`onWrite(key, value | null)`** on memory: called after every successful write, swap and remove
-  (`null`). wh mirrors its due keys into its own index with it.
+- **`onWrite(key, value | null)`** on memory and redis: called after every successful write, swap and
+  remove (`null`). On redis it also receives `{ client, redisKey, toRedisKey }`. wh mirrors its due
+  keys into a sorted set with it:
+
+  ```ts
+  import { createRedisStorage } from "@xtandard/kit/storage/redis";
+
+  const storage = createRedisStorage({
+    ...options,
+    onWrite: async (key, value, { client, toRedisKey }) => {
+      const due = parseDueKey(key); // product code
+      if (!due) return;
+      if (value === null) await client.zRem(toRedisKey("whk:due"), key);
+      else await client.zAdd(toRedisKey("whk:due"), { score: due.dueAtMillis, value: key });
+    },
+  });
+  ```
+
 - **`…/internals` subpaths** (semi-public, versioned like any export):
   - `storage/sqlite/internals`: `sqliteConnection(options, ddl)`, `bunSqliteExecutor`,
     `sqliteKvStorage(table, exec)`, `sqliteKvSchema`, `SqliteExecutor`.
@@ -264,7 +325,11 @@ forking them.
   - `storage/postgres/internals`: `pgConnection(client, connectionString)`, `pgReady(connection,
 ddl)`, `postgresKvStorage(table, exec)`, `postgresStorageSchema`.
   - `storage/drizzle/internals`: `detectDrizzleDialect`, `affectedRows`, `drizzleSql`,
-    `DrizzleLikeDatabase`.
+    `prefixSuccessor`, `DrizzleLikeDatabase`.
+  - `storage/mongodb/internals`: `mongoConnection`, `isDuplicateKey`, `mongoKvStorage(collection)`.
+  - `storage/redis/internals`: `redisConnection`, `scanKeys` (de-duplicating), `stringCodec`,
+    `jsonCodec`, and `createRedisKvStorage({ codec, connection, … })`, so a capability layer (wh's
+    `claimDue` Lua script) runs on the driver's own connection.
 
   The connection helpers take a list of DDL statements that run once (retried after a failure).
   au's event log passes its own tables there and reuses the executor for its queries:
@@ -293,6 +358,9 @@ Upgrading a product never makes existing keys unreadable or swaps fail forever:
 - **New-table DDL only:** `COLLATE "C"` (pg) and `utf8mb4_bin` (MySQL) apply to tables the kit
   or the factories create; older tables keep working through the exact prefix post-filter, and the
   optional migration SQL is above.
+- **Mongo and Redis:** documents and values written with fields in insertion order (and RedisJSON
+  vs string-codec values) are read, listed and swapped; `test/fixtures/stored-data/products.json`
+  drives those fixtures under every product's key root, database and collection.
 - **CAS on legacy values:** writes are canonical. A swap first tries the canonical form, then reads
   the stored value, compares it structurally and swaps on the exact stored form, with bounded
   retries.
@@ -343,6 +411,9 @@ runStorageConformance("postgres", () => createPostgresStorage({ client, table: f
   file watch no longer reports a write as `remove`, file writes are atomic, empty key segments are
   distinct keys (file, unstorage), unstorage keys ending in `$` are listed, memory CAS checks own
   properties, and `withWatch` results survive a spread.
+- Redis: `getKeys` no longer returns duplicates, `watch` no longer misses events under a prefix with
+  glob characters, values are written as canonical JSON, and every product now has
+  `compareAndSwap` on redis (wh and fl had none). Mongo now has `compareAndSwap` everywhere.
 - SQL drivers (postgres, drizzle): a stored JSON **string** that looks like JSON (`"123"`) now reads
   back as that string; the copies parsed it a second time (`123`). sqlite/libsql/postgres/drizzle
   now all have `compareAndSwap`, and the drizzle driver has it on MySQL too.
