@@ -1,7 +1,14 @@
 /**
- * `@xtandard/kit/testing` — not implemented yet.
+ * `@xtandard/kit/testing` — generic test helpers: `createTestClock` and
+ * `collectingSink`.
  *
  * @module
  */
 
-export {};
+export {
+  collectingSink,
+  createTestClock,
+  type CollectingSink,
+  type CollectingSinkOptions,
+  type TestClock,
+} from "./testing/index.ts";

@@ -1,7 +1,8 @@
 /**
- * `@xtandard/kit/authorization/none` — not implemented yet.
+ * `@xtandard/kit/authorization/none` — `noAuthorization()`: every action is
+ * allowed. For embedded and local use only.
  *
  * @module
  */
 
-export {};
+export { noAuthorization } from "./authorization/none.ts";
