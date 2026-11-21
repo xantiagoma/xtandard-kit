@@ -94,13 +94,15 @@ describe("static assets", () => {
     expect(resolveUiDir("https://example.com/x.mjs")).toBeUndefined();
   });
 
-  it("resolveUiDir is undefined without node built-ins (Workers)", () => {
-    const original = process.getBuiltinModule;
-    (process as { getBuiltinModule?: unknown }).getBuiltinModule = undefined;
+  it("resolveUiDir is undefined without a Node-like runtime (Workers)", () => {
+    // Workers without nodejs_compat: no Node `process`, so no built-ins now or later.
+    const g = globalThis as { process?: unknown };
+    const real = g.process;
+    g.process = { env: {} };
     try {
       expect(resolveUiDir(import.meta.url)).toBeUndefined();
     } finally {
-      process.getBuiltinModule = original;
+      g.process = real;
     }
   });
 });

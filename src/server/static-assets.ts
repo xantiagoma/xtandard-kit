@@ -97,15 +97,31 @@ export function resolveUiDir(
 ): string | undefined {
   const fs = getBuiltin<{ existsSync(path: string): boolean }>("node:fs");
   const url = getBuiltin<{ fileURLToPath(url: URL): string }>("node:url");
-  if (!fs || !url) return undefined;
   try {
-    const paths = [...candidates, "./ui", "../../dist/ui"].map((c) =>
-      url.fileURLToPath(new URL(c, moduleUrl)),
-    );
+    const urls = [...candidates, "./ui", "../../dist/ui"].map((c) => new URL(c, moduleUrl));
+    if (urls.some((u) => u.protocol !== "file:")) return undefined;
+    if (!fs || !url) {
+      // No synchronous built-ins (Node < 20.16 has no `process.getBuiltinModule`): assume the
+      // compiled layout, which is the npm-consumer case, rather than serving the fallback page.
+      // Only the from-source layout (`../../dist/ui`) then needs an explicit `uiDir`.
+      return isNodeLike() ? filePath(urls[candidates.length]!) : undefined;
+    }
+    const paths = urls.map((u) => url.fileURLToPath(u));
     return paths.find((p) => fs.existsSync(p)) ?? paths[candidates.length];
   } catch {
     return undefined;
   }
+}
+
+/** True on Node-compatible runtimes (where `node:fs` can be imported later, when serving). */
+const isNodeLike = (): boolean =>
+  typeof (globalThis as { process?: { versions?: { node?: string } } }).process?.versions?.node ===
+  "string";
+
+/** `fileURLToPath` without `node:url`: POSIX paths, and `C:\…` for Windows drive letters. */
+export function filePath(fileUrl: URL): string {
+  const path = decodeURIComponent(fileUrl.pathname);
+  return /^\/[A-Za-z]:/.test(path) ? path.slice(1).replaceAll("/", "\\") : path;
 }
 
 /** A Node built-in, synchronously, when the runtime has it (Node ≥ 20.16, Bun, Deno). */

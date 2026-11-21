@@ -62,6 +62,10 @@ Request flow:
 them (Workers without `nodejs_compat`), `resolveUiDir` returns `undefined`. The panel then serves
 the API and a small fallback page.
 
+On Node 20.0–20.15, which lacks `process.getBuiltinModule`, `resolveUiDir` cannot check which
+directory exists, so it assumes the compiled layout (`./ui`, the npm case). Running from source on
+those versions needs an explicit `uiDir`.
+
 ## `renderIndexHtml`
 
 ```ts
