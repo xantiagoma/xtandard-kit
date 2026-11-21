@@ -24,12 +24,21 @@ site/
 ```
 
 `site/package.json` lists `@xtandard/kit` next to the site's own dependencies: `astro`,
-`@astrojs/starlight`, `starlight-typedoc`, `typedoc`, `typedoc-plugin-markdown`,
-`typedoc-plugin-missing-exports`, `typescript`, `astro-mermaid`, `mermaid` and
-`starlight-links-validator`. The kit loads those integrations when the config runs, resolving them
-from the site's own install. That is why the kit must be installed in `site/node_modules`, not only
-at the repo root. In the kit repo itself the site uses `"@xtandard/kit": "file:.."`, which Bun
-copies, so `bun run build` must run at the root first.
+`@astrojs/starlight`, `@astrojs/markdown-remark` (Mermaid's remark plugins need it under Astro 7),
+`starlight-typedoc`, `typedoc`, `typedoc-plugin-markdown`, `typedoc-plugin-missing-exports`,
+`typescript`, `astro-mermaid`, `mermaid` and `starlight-links-validator`.
+
+The kit loads those integrations from the **site's** install (`importFromSite`: `node_modules`
+from the site directory upwards), so Astro, Starlight, TypeDoc and the TypeScript compiler are the
+site's own instances wherever the kit itself is installed. `defineXtandardSite` imports them while
+Astro evaluates the config, then hands `typedoc` and `typescript` to the TypeDoc plugin.
+
+The kit's own site installs the local build instead of a published version:
+`scripts/link-kit.ts` copies the root's `package.json`, `dist/`, `bin/` and `tsconfig/` into
+`site/node_modules/@xtandard/kit`, as `bun add` would. Run `bun run build` at the root first;
+`kit-pages.yml` does it through the `prebuild` input. A `file:..` dependency doesn't work here:
+Bun installs it as a tree of symlinks into the repo (this site included), so Node and Vite resolve
+the kit, and then its peers, from the repo root.
 
 ## The manifest
 

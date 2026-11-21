@@ -1,6 +1,7 @@
-// The documentation site, dogfooding @xtandard/kit/site: Starlight over the repository's Markdown
-// (scripts/sync.ts copies it into src/content/docs/ first), a TypeDoc API reference with one module
-// per `exports` entry, and Mermaid diagrams. manifest.ts holds the information architecture.
+// The documentation site, dogfooding @xtandard/kit/site (the local build, installed by
+// scripts/link-kit.ts): Starlight over the repository's Markdown (scripts/sync.ts copies it into
+// src/content/docs/ first), a TypeDoc API reference with one module per `exports` entry, and
+// Mermaid diagrams. manifest.ts holds the information architecture.
 // `bun run build` writes dist/ here; .github/workflows/kit-pages.yml publishes it.
 import { defineXtandardSite } from "@xtandard/kit/site";
 import { manifest } from "./manifest.ts";
