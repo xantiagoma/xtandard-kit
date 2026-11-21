@@ -93,7 +93,14 @@ export const SUBPATHS: Subpath[] = [
   {
     path: "site",
     esmOnly: true,
-    peers: ["astro", "@astrojs/starlight", "starlight-typedoc", "typedoc"],
+    peers: [
+      "astro",
+      "@astrojs/starlight",
+      "starlight-typedoc",
+      "typedoc",
+      "astro-mermaid",
+      "starlight-links-validator",
+    ],
   },
 ];
 
