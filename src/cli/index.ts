@@ -10,6 +10,7 @@
  * @module
  */
 
+import { filePath } from "../server/static-assets.ts";
 import type { AuthorizationProvider } from "../authorization/contract.ts";
 import type { AuthProvider } from "../auth/contract.ts";
 import type { RolesAuthorizationOptions } from "../authorization/roles.ts";
@@ -647,10 +648,12 @@ export function isMainModule(meta: { url: string; main?: boolean }): boolean {
     | { fileURLToPath(u: string): string; pathToFileURL(p: string): URL }
     | undefined;
   const fs = proc?.getBuiltinModule?.("node:fs") as { realpathSync(p: string): string } | undefined;
-  if (!entry || !url) return false;
+  if (!entry) return false;
   try {
+    // Without synchronous built-ins (Node < 20.16) compare the plain file path, symlinks unresolved.
+    const fromUrl = (u: string) => (url ? url.fileURLToPath(u) : filePath(new URL(u)));
     const real = (p: string) => (fs ? fs.realpathSync(p) : p);
-    return real(url.fileURLToPath(meta.url)) === real(entry);
+    return real(fromUrl(meta.url)) === real(entry);
   } catch {
     return false;
   }
