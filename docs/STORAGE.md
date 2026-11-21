@@ -412,7 +412,7 @@ import { runStorageConformance } from "@xtandard/kit/storage/testing";
 
 runStorageConformance("postgres", () => createPostgresStorage({ client, table: freshTable() }), {
   t: { describe, test, expect },
-  capabilities: { compareAndSwap: true, watch: false }, // watch: true | { settleMs }
+  capabilities: { compareAndSwap: true, watch: false }, // watch: true | { settleMs, removals }
   keyRoot: "whk", // first segment of every key the suite writes
   timeout: 20_000,
   seedLegacy: async (_storage, key, rawJson) => {
@@ -430,6 +430,15 @@ runStorageConformance("postgres", () => createPostgresStorage({ client, table: f
 - Products register their own suites with `runConformanceCases(title, cases, make, options)`, where
   each case is `{ name, run({ storage, key, expect, settle, options }) }`. The kit's case lists
   (`contractCases`, `compareAndSwapCases`, `watchCases`) are exported too.
+- **Declare every capability.** A built-in case checks `capabilities` against the storage itself. A
+  driver that implements `compareAndSwap` or `watch` without declaring it fails, rather than
+  silently skipping those cases, and so does one that declares a capability it lacks. Pass `false`
+  for what the driver doesn't have. For a `withWatch` storage, whose notifier only gives a key so
+  every event is an `update`, pass `watch: { removals: false }`.
+- **No live Redis needed** for a product's wrapped redis driver: `fakeRedis()` (with
+  `asRedisClient`) from the same subpath emulates strings, RedisJSON, the kit's Lua scripts, sorted
+  sets, a repeating SCAN and glob PSUBSCRIBE. A product's own Lua scripts can be answered through
+  `fakeRedis({ eval })`, which returns `undefined` to fall through to the kit's.
 - Live backends are gated by environment variables only: `REDIS_URL`, `REDIS_JSON_URL`,
   `MONGO_URL`, `POSTGRES_URL`, `MYSQL_URL`.
 
