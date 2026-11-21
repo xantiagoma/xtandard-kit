@@ -7,6 +7,7 @@
  */
 
 export {
+  capabilitiesCase,
   compareAndSwapCases,
   contractCases,
   requireCompareAndSwap,
@@ -24,3 +25,9 @@ export {
   type MakeStorage,
   type SeedLegacy,
 } from "./storage/testing/conformance.ts";
+export {
+  asRedisClient,
+  fakeRedis,
+  type FakeRedis,
+  type FakeRedisOptions,
+} from "./storage/testing/fake-redis.ts";

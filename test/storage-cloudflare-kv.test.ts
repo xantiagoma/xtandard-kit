@@ -35,12 +35,13 @@ runStorageConformance(
   () => createCloudflareKvStorage({ namespace: fakeKv() }),
   {
     t: { describe, test, expect },
+    capabilities: { compareAndSwap: false, watch: false },
   },
 );
 runStorageConformance(
   "cloudflare-kv (fake binding, prefixed)",
   () => createCloudflareKvStorage({ namespace: fakeKv(), prefix: "prod" }),
-  { t: { describe, test, expect } },
+  { t: { describe, test, expect }, capabilities: { compareAndSwap: false, watch: false } },
 );
 
 describe("cloudflare-kv driver", () => {

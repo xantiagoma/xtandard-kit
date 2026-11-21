@@ -9,7 +9,7 @@ import strings from "./fixtures/stored-data/unstorage-strings.json" with { type:
 runStorageConformance(
   "unstorage (memory driver)",
   () => createUnstorageStorage({ storage: createStorage({ driver: memoryDriver() }) }),
-  { t: { describe, test, expect } },
+  { t: { describe, test, expect }, capabilities: { compareAndSwap: false, watch: false } },
 );
 
 describe("unstorage key encoding", () => {

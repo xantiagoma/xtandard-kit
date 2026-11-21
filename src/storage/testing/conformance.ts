@@ -50,15 +50,22 @@ export type MakeStorage = () => KvStorage | Promise<KvStorage>;
  */
 export type SeedLegacy = (storage: KvStorage, key: string, rawJson: string) => Promise<void>;
 
-/** Optional capabilities the driver under test implements. */
+/**
+ * The optional capabilities the driver under test implements. Declare each one: a capability case
+ * checks the declaration against the storage itself, so a driver that implements `compareAndSwap`
+ * or `watch` without declaring it (or declares one it lacks) fails instead of silently skipping
+ * cases. Pass `false` for a capability the driver doesn't have.
+ */
 export interface ConformanceCapabilities {
   /** Run the compare-and-swap cases (the storage must implement `compareAndSwap`). */
   compareAndSwap?: boolean;
   /**
    * Run the watch cases (the storage must implement `watch`). `settleMs` is how long to wait for
-   * notifications to arrive (default 50 ms).
+   * notifications to arrive (default 50 ms). `removals: false` is for watchers that report every
+   * change as `update` (a {@link withWatch} storage, whose notifier gives only a key): a removal must
+   * then still produce an event, of any type. Default `true`.
    */
-  watch?: boolean | { settleMs: number };
+  watch?: boolean | { settleMs?: number; removals?: boolean };
 }
 
 /** Options for {@link runStorageConformance}. */
@@ -561,11 +568,16 @@ export const watchCases: ConformanceCase[] = [
       await watchable.setItem(key("other", "b"), { v: 1 });
       // Filesystem watchers coalesce a create immediately followed by a delete.
       await settle(ms);
+      const beforeRemove = events.length;
       await watchable.removeItem(key("w", "a"));
       await settle(ms);
       await off();
       expect(events.some((e) => e.type === "update" && e.key === key("w", "a"))).toBe(true);
-      expect(events.some((e) => e.type === "remove" && e.key === key("w", "a"))).toBe(true);
+      if (reportsRemovals(options)) {
+        expect(events.some((e) => e.type === "remove" && e.key === key("w", "a"))).toBe(true);
+      } else {
+        expect(events.slice(beforeRemove).some((e) => e.key === key("w", "a"))).toBe(true);
+      }
       expect(events.every((e) => e.key.startsWith(key("w", "")))).toBe(true);
     },
   },
@@ -603,9 +615,39 @@ export const watchCases: ConformanceCase[] = [
   },
 ];
 
+/**
+ * The declared capabilities match the storage: an undeclared `compareAndSwap` or `watch` would skip
+ * those cases silently, and a declared one the storage lacks would fail them obscurely.
+ */
+export const capabilitiesCase: ConformanceCase = {
+  name: "declared capabilities match the storage",
+  async run({ storage, expect, options }) {
+    const declared = options.capabilities ?? {};
+    const problems: string[] = [];
+    const check = (name: "compareAndSwap" | "watch", has: boolean): void => {
+      const value = declared[name];
+      if (value === undefined && has) {
+        problems.push(
+          `implements ${name} but capabilities.${name} is not declared (true to run its cases, false to skip)`,
+        );
+      } else if (value && !has) {
+        problems.push(`declares capabilities.${name} but does not implement it`);
+      }
+    };
+    check("compareAndSwap", isCompareAndSwap(storage));
+    check("watch", isWatchable(storage));
+    expect(problems).toEqual([]);
+  },
+};
+
 const settleMs = (options: ConformanceOptions): number => {
   const watch = options.capabilities?.watch;
-  return typeof watch === "object" ? watch.settleMs : 50;
+  return typeof watch === "object" ? (watch.settleMs ?? 50) : 50;
+};
+
+const reportsRemovals = (options: ConformanceOptions): boolean => {
+  const watch = options.capabilities?.watch;
+  return typeof watch === "object" ? watch.removals !== false : true;
 };
 
 /**
@@ -630,7 +672,12 @@ export function runStorageConformance(
   make: MakeStorage,
   options: ConformanceOptions,
 ): void {
-  runConformanceCases(`KvStorage contract: ${name}`, contractCases, make, options);
+  runConformanceCases(
+    `KvStorage contract: ${name}`,
+    [capabilitiesCase, ...contractCases],
+    make,
+    options,
+  );
   if (options.capabilities?.compareAndSwap) {
     runConformanceCases(`compareAndSwap: ${name}`, compareAndSwapCases, make, options);
   }

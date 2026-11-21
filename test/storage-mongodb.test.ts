@@ -52,7 +52,7 @@ describe.skipIf(!MONGO_URL)("mongodb (live)", () => {
       owned.push(storage);
       return storage;
     },
-    { t: { describe, test, expect }, timeout: 30_000 },
+    { t: { describe, test, expect }, capabilities: { compareAndSwap: true }, timeout: 30_000 },
   );
 
   test("a value with $-prefixed keys swaps as data, not as an expression (O12)", async () => {
