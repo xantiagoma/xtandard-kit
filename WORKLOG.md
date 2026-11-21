@@ -98,3 +98,22 @@
   and publint are clean.
 - All three build workers are done; their summaries are in `docs/research/build-{storage,server,ui}.md`.
   The webhooks pilot (t82) continues on kit 0.1.0.
+
+## 2026-11-21: phase 4 under way (migrations against a local kit)
+
+- 0.1.0 is built from `e2dc9ad` and waits on the owner's npm 2FA (t1r). v0.1.1 is prepared as draft
+  PR #22; it is tagged only after t1r confirms 0.1.0 + trust.
+- The migrations found these kit fixes and gaps, merged for 0.1.1:
+  - #17: driver errors name the product subpath;
+  - #18: file read-through aliasing (data loss in fl's default mode);
+  - #19: Node 20.0–20.15 served the fallback page;
+  - #20: `storageRegistryFrom`, `isMainModule(url)`, `validateKeySegment` `maxLength`;
+  - #21: example runner `seed`, `demo` optional;
+  - #23: `padSpaceKeys`, `SqliteExecutor.atomic`, `isDuplicateKey` bulk errors, `CanonicalInput`,
+    tokens sign the validated claims.
+- Migrations, each green locally and with no PR until the kit is on npm:
+  - **webhooks:** net -5,181 LOC, 0 API removals;
+  - **flags:** net -5,596, 0 removals;
+  - **audit:** net -5,672, 0 removals; its event log sits on the kit internals;
+  - **links** (t8r) and **entitlements** (t8w) are in progress.
+- The shared tarball at `xtandard-kit-wt-pilot/pack` is re-packed at kit main `9a16c7f`.
