@@ -89,5 +89,5 @@ describe("xtandard-kit", () => {
     const failing = await cli("api-surface", pkg);
     expect(failing.code).toBe(0);
     expect(failing.err).toContain("! .: import ./dist/index.mjs: peer missing");
-  });
+  }, 60_000); // spawns the CLI eight times, each loading the TypeScript compiler
 });
