@@ -34,28 +34,28 @@ Product names are normalised to `X` (e.g. `XStorage` = `WebhooksStorage` / `Flag
 
 ## 1. LOC per copy (`matrix.tsv` loc columns; `d:` = lines differing from wh after name normalisation)
 
-| file | wh | fl | au | li | en | d:fl | d:au | d:li | d:en |
-|---|---|---|---|---|---|---|---|---|---|
-| storage/contract.ts | 94 | 70 | 127 | 71 | 76 | 34 | 71 | 43 | 38 |
-| storage/memory.ts | 154 | 70 | 177 | 99 | 100 | 110 | 133 | 73 | 104 |
-| storage/file.ts | 252 | 232 | 197 | 187 | 242 | 182 | 127 | 123 | 212 |
-| storage/sqlite.ts | 90 | 90 | 117 | 108 | 74 | 2 | 51 | 32 | 50 |
-| storage/libsql.ts | 153 | 153 | 187 | 201 | 150 | 6 | 64 | 66 | 169 |
-| storage/postgres.ts | 192 | 192 | 359 | 217 | 222 | 8 | 247 | 41 | 194 |
-| storage/mongodb.ts | 182 | 182 | 407 | 224 | 233 | 8 | 279 | 60 | 167 |
-| storage/redis.ts | 403 | 292 | 373 | 360 | 382 | 151 | 200 | 191 | 315 |
-| storage/cloudflare-kv.ts | 106 | 100 | 109 | 107 | 103 | 20 | 21 | 21 | 23 |
-| storage/unstorage.ts | 87 | 87 | 90 | 86 | 90 | 12 | 11 | 27 | 57 |
-| storage/drizzle.ts | 147 | 146 | 489 | 220 | 220 | 17 | 408 | 111 | 209 |
-| storage/watch.ts | 106 | 106 | 106 | 106 | 110 | 22 | 0 | 12 | 26 |
-| storage/ extra | – | – | sql.ts 282, sqlite-event-log.ts 191 | – | util.ts 100, sqlite-kv.ts 83 | | | | |
-| drizzle/table.ts | 19 | 19 | 59 | 19 | 33 | 0 | 46 | 0 | 30 |
-| drizzle/pg.ts | 70 | 64 | 182 | 70 | 113 | 24 | 148 | 8 | 101 |
-| drizzle/mysql.ts | 77 | 74 | 173 | 73 | 112 | 41 | 124 | 30 | 107 |
-| drizzle/sqlite.ts | 65 | 57 | 148 | 61 | 98 | 22 | 111 | 14 | 93 |
-| keys.ts | 145 | 85 | 123 | 99 | 75 | (product layout; diff meaningless) |
-| test/storage-contract.ts | 328 | 140 | 473 | 250 | 204 | 326 | 649 | 392 | 394 |
-| **all src/storage + src/drizzle** | 2181 | 1918 | 3757 | 2193 | 2525 | | | | |
+| file                              | wh   | fl   | au                                  | li   | en                           | d:fl                               | d:au | d:li | d:en |
+| --------------------------------- | ---- | ---- | ----------------------------------- | ---- | ---------------------------- | ---------------------------------- | ---- | ---- | ---- |
+| storage/contract.ts               | 94   | 70   | 127                                 | 71   | 76                           | 34                                 | 71   | 43   | 38   |
+| storage/memory.ts                 | 154  | 70   | 177                                 | 99   | 100                          | 110                                | 133  | 73   | 104  |
+| storage/file.ts                   | 252  | 232  | 197                                 | 187  | 242                          | 182                                | 127  | 123  | 212  |
+| storage/sqlite.ts                 | 90   | 90   | 117                                 | 108  | 74                           | 2                                  | 51   | 32   | 50   |
+| storage/libsql.ts                 | 153  | 153  | 187                                 | 201  | 150                          | 6                                  | 64   | 66   | 169  |
+| storage/postgres.ts               | 192  | 192  | 359                                 | 217  | 222                          | 8                                  | 247  | 41   | 194  |
+| storage/mongodb.ts                | 182  | 182  | 407                                 | 224  | 233                          | 8                                  | 279  | 60   | 167  |
+| storage/redis.ts                  | 403  | 292  | 373                                 | 360  | 382                          | 151                                | 200  | 191  | 315  |
+| storage/cloudflare-kv.ts          | 106  | 100  | 109                                 | 107  | 103                          | 20                                 | 21   | 21   | 23   |
+| storage/unstorage.ts              | 87   | 87   | 90                                  | 86   | 90                           | 12                                 | 11   | 27   | 57   |
+| storage/drizzle.ts                | 147  | 146  | 489                                 | 220  | 220                          | 17                                 | 408  | 111  | 209  |
+| storage/watch.ts                  | 106  | 106  | 106                                 | 106  | 110                          | 22                                 | 0    | 12   | 26   |
+| storage/ extra                    | –    | –    | sql.ts 282, sqlite-event-log.ts 191 | –    | util.ts 100, sqlite-kv.ts 83 |                                    |      |      |      |
+| drizzle/table.ts                  | 19   | 19   | 59                                  | 19   | 33                           | 0                                  | 46   | 0    | 30   |
+| drizzle/pg.ts                     | 70   | 64   | 182                                 | 70   | 113                          | 24                                 | 148  | 8    | 101  |
+| drizzle/mysql.ts                  | 77   | 74   | 173                                 | 73   | 112                          | 41                                 | 124  | 30   | 107  |
+| drizzle/sqlite.ts                 | 65   | 57   | 148                                 | 61   | 98                           | 22                                 | 111  | 14   | 93   |
+| keys.ts                           | 145  | 85   | 123                                 | 99   | 75                           | (product layout; diff meaningless) |
+| test/storage-contract.ts          | 328  | 140  | 473                                 | 250  | 204                          | 326                                | 649  | 392  | 394  |
+| **all src/storage + src/drizzle** | 2181 | 1918 | 3757                                | 2193 | 2525                         |                                    |      |      |      |
 
 The `entry-storage-*.ts` / `entry-drizzle-*.ts` files are 8–18 lines each, and all are re-export
 shims (§7). en also has `src/counters/*` (11 files, ~1.6k LOC) built on storage internals. That is out
@@ -82,35 +82,36 @@ of this area's scope, but it is noted in §5.
 
 ### memory.ts — diverged by capability
 
-| | watch | CAS | product capability |
-|---|---|---|---|
-| wh | ✓ | ✓ | `claimDue` (`wh:src/storage/memory.ts:110-152`, uses `DUE_KEY_RE`, `parseDueKey`, `deliveryKey`) |
-| fl | ✓ | **✗** (`fl:src/storage/memory.ts:32` returns `WatchableFlagsStorage`) | – |
-| au | ✓ | ✓ | native event log (per-tenant arrays) |
-| li | ✓ | ✓ | – (also *exports* `deepEqual`, `li:src/storage/memory.ts:28`, used by li's drizzle/mongodb/libsql/redis) |
-| en | ✓ | ✓ | – |
+|     | watch | CAS                                                                   | product capability                                                                                       |
+| --- | ----- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| wh  | ✓     | ✓                                                                     | `claimDue` (`wh:src/storage/memory.ts:110-152`, uses `DUE_KEY_RE`, `parseDueKey`, `deliveryKey`)         |
+| fl  | ✓     | **✗** (`fl:src/storage/memory.ts:32` returns `WatchableFlagsStorage`) | –                                                                                                        |
+| au  | ✓     | ✓                                                                     | native event log (per-tenant arrays)                                                                     |
+| li  | ✓     | ✓                                                                     | – (also _exports_ `deepEqual`, `li:src/storage/memory.ts:28`, used by li's drizzle/mongodb/libsql/redis) |
+| en  | ✓     | ✓                                                                     | –                                                                                                        |
 
 - **Equality:** every `memory.ts` `deepEqual` omits a `hasOwnProperty` check, so `{a: undefined}`
   equals `{b: undefined}`. Stored values are `structuredClone`d, so `undefined` members survive. en's
-  `util.ts:72` `deepEqual` *does* check, but en's `memory.ts` still uses its own local copy.
+  `util.ts:72` `deepEqual` _does_ check, but en's `memory.ts` still uses its own local copy.
 - **Best:** en/li, with `util.deepEqual`.
 
 ### file.ts — diverged (the largest real drift)
 
 Common to all five (from the case-collision fix):
+
 - `encodeSegment`/`decodeSegment`: uppercase → `^x`, `^` → `^^`, other bytes → `%XX`, leading `.` → `%2E`.
 - The allowed set is `[a-z0-9._~!@,=+-]`. wh lists `_` twice; the behaviour is the same.
 - Recursive `walk`, and `fs.watch` for watch.
 
 Differences:
 
-| behaviour | wh | fl | au | li | en |
-|---|---|---|---|---|---|
-| legacy (pre-encoding) files | ignored + one-time `console.warn`; `migrateFileStorage({dir})` exported (`wh:src/storage/file.ts:213`) | read-through, removed on next write; case-exact `existsExactly` (`fl:src/storage/file.ts:78-103`); Set-dedup in getKeys | none | none | none |
-| watch `rename` → type | **always `remove`** (`wh:…/file.ts:191`) | **always `remove`** (`fl:…/file.ts:217`) | `existsSync` check (`au:…/file.ts:182`) | async `access` check | `existsSync(keyToPath)` (`en:…/file.ts:227`) |
-| atomic write (tmp + `rename`) | ✗ | ✗ | ✓ (`au:…/file.ts:143-147`) | ✗ | ✓ (`en:…/file.ts:171-175`) |
-| empty segment (`a//b`, trailing `/`) | collapses (`path.join`) | collapses | collapses | collapses | `""` → `%` (`en:…/file.ts:56,70`); tested with `ent//empty` (`en:test/storage-file.test.ts:96`) |
-| CAS | ✗ | ✗ | ✗ | ✗ | ✓, in-process per-key promise lock `withLock` (`en:…/file.ts:148`) |
+| behaviour                            | wh                                                                                                     | fl                                                                                                                      | au                                      | li                   | en                                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------- |
+| legacy (pre-encoding) files          | ignored + one-time `console.warn`; `migrateFileStorage({dir})` exported (`wh:src/storage/file.ts:213`) | read-through, removed on next write; case-exact `existsExactly` (`fl:src/storage/file.ts:78-103`); Set-dedup in getKeys | none                                    | none                 | none                                                                                            |
+| watch `rename` → type                | **always `remove`** (`wh:…/file.ts:191`)                                                               | **always `remove`** (`fl:…/file.ts:217`)                                                                                | `existsSync` check (`au:…/file.ts:182`) | async `access` check | `existsSync(keyToPath)` (`en:…/file.ts:227`)                                                    |
+| atomic write (tmp + `rename`)        | ✗                                                                                                      | ✗                                                                                                                       | ✓ (`au:…/file.ts:143-147`)              | ✗                    | ✓ (`en:…/file.ts:171-175`)                                                                      |
+| empty segment (`a//b`, trailing `/`) | collapses (`path.join`)                                                                                | collapses                                                                                                               | collapses                               | collapses            | `""` → `%` (`en:…/file.ts:56,70`); tested with `ent//empty` (`en:test/storage-file.test.ts:96`) |
+| CAS                                  | ✗                                                                                                      | ✗                                                                                                                       | ✗                                       | ✗                    | ✓, in-process per-key promise lock `withLock` (`en:…/file.ts:148`)                              |
 
 - **Best:** en, plus wh's `migrateFileStorage` and legacy warning (wh's public API), or fl's
   read-through.
@@ -190,6 +191,7 @@ Differences:
 ### redis.ts (+ `createRedisJSONStorage`) — diverged
 
 All five share the same skeleton:
+
 - node-redis `RedisLike`.
 - Lazy connect with `disableOfflineQueue` and a capped reconnect, and an always-attached `error`
   handler plus `onError`.
@@ -197,13 +199,13 @@ All five share the same skeleton:
 - A value codec (string vs RedisJSON).
 - SCAN `getKeys`, keyspace-notification `watch`, and `close()` (only for clients it owns).
 
-| | SCAN MATCH escaped | `startsWith` post-filter | SCAN de-dup | watch `PSUBSCRIBE` pattern escaped | CAS | product |
-|---|---|---|---|---|---|---|
-| wh | ✓ (`wh:…/redis.ts:300`) | ✓ | ✗ | **✗** (`wh:…/redis.ts:382`) | ✗ | `claimDue`: `<prefix>whk:due` zset mirrored on set/remove of due keys + Lua `ZRANGEBYSCORE`/reposition (`:28-37, 284-366`) |
-| fl | ✓ (`fl:…/redis.ts:248`) | ✓ | ✗ | **✗** (`fl:…/redis.ts:271`) | ✗ | – |
-| au | ✓ | ✓ (ed8bc48) | ✗ | ✓ (`au:…/redis.ts:344`) | Lua, server-side structural `cjson` compare, one round-trip (`au:…/redis.ts:114-163`) | – |
-| li | ✓ | ✓ | **✓** `new Set` (`li:…/redis.ts:309`) | ✓ (`li:…/redis.ts:339`) | read raw + JS `deepEqual` + Lua raw-equality write, 16 retries (`li:…/redis.ts:312-327`) | – |
-| en | ✓ (`util.escapeRedisGlob`) | ✓ | ✗ | ✓ (`en:…/redis.ts:364`) | Lua structural compare, codec-aware `ARGV[4]` (`en:…/redis.ts:151-173`) | exported `redisConnection`, `scanKeys`, `RedisLike` (used by `counters/redis`) |
+|     | SCAN MATCH escaped         | `startsWith` post-filter | SCAN de-dup                           | watch `PSUBSCRIBE` pattern escaped | CAS                                                                                      | product                                                                                                                    |
+| --- | -------------------------- | ------------------------ | ------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| wh  | ✓ (`wh:…/redis.ts:300`)    | ✓                        | ✗                                     | **✗** (`wh:…/redis.ts:382`)        | ✗                                                                                        | `claimDue`: `<prefix>whk:due` zset mirrored on set/remove of due keys + Lua `ZRANGEBYSCORE`/reposition (`:28-37, 284-366`) |
+| fl  | ✓ (`fl:…/redis.ts:248`)    | ✓                        | ✗                                     | **✗** (`fl:…/redis.ts:271`)        | ✗                                                                                        | –                                                                                                                          |
+| au  | ✓                          | ✓ (ed8bc48)              | ✗                                     | ✓ (`au:…/redis.ts:344`)            | Lua, server-side structural `cjson` compare, one round-trip (`au:…/redis.ts:114-163`)    | –                                                                                                                          |
+| li  | ✓                          | ✓                        | **✓** `new Set` (`li:…/redis.ts:309`) | ✓ (`li:…/redis.ts:339`)            | read raw + JS `deepEqual` + Lua raw-equality write, 16 retries (`li:…/redis.ts:312-327`) | –                                                                                                                          |
+| en  | ✓ (`util.escapeRedisGlob`) | ✓                        | ✗                                     | ✓ (`en:…/redis.ts:364`)            | Lua structural compare, codec-aware `ARGV[4]` (`en:…/redis.ts:151-173`)                  | exported `redisConnection`, `scanKeys`, `RedisLike` (used by `counters/redis`)                                             |
 
 - **SCAN duplicates:** Redis SCAN may return a key more than once, so every copy except li can return
   duplicate keys.
@@ -247,7 +249,7 @@ All five share the same skeleton:
     tables are passed (`au:src/storage/drizzle.ts:198-205, 267-489`).
 - **li:**
   - Adds CAS on pg/sqlite tables.
-  - Detects MySQL via `table.constructor[entityKind]` and returns *no* CAS there
+  - Detects MySQL via `table.constructor[entityKind]` and returns _no_ CAS there
     (`li:src/storage/drizzle.ts:106-109, 180`).
   - The swap is read + `deepEqual` + `UPDATE … WHERE value = <observed>` with 16 retries.
 - **en:**
@@ -258,7 +260,7 @@ All five share the same skeleton:
     - pg: `value = $::jsonb`.
     - MySQL: `value = cast(? as json)` + `INSERT IGNORE`, with `affectedRows()`.
     - sqlite: canonical-text equality.
-  - Caveat: the MySQL UPDATE path counts *changed* rows unless the driver sets `CLIENT_FOUND_ROWS`
+  - Caveat: the MySQL UPDATE path counts _changed_ rows unless the driver sets `CLIENT_FOUND_ROWS`
     (mysql2 does by default). A swap whose `next` equals `expected` would report false on a driver
     that doesn't.
 - **Best:** en.
@@ -281,11 +283,11 @@ All five share the same skeleton:
   - The MySQL key column is `varchar(n) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin`.
 - **Default table names differ** (a seam):
 
-  | repo | default table name |
-  |---|---|
-  | wh, au | `xtandard_X` |
-  | li, en | `xtandard_X_kv` |
-  | fl | none: `name` is **required** (`fl:src/drizzle/pg.ts:54`) |
+  | repo   | default table name                                       |
+  | ------ | -------------------------------------------------------- |
+  | wh, au | `xtandard_X`                                             |
+  | li, en | `xtandard_X_kv`                                          |
+  | fl     | none: `name` is **required** (`fl:src/drizzle/pg.ts:54`) |
 
 - **au** adds `{dialect}AuditEventsTable`, `…EventTargetsTable`, `…AuditTables()`, plus the
   `DrizzleEventsTable`/`DrizzleEventTargetsTable`/`DrizzleAuditTables` types, and `text COLLATE "C"`
@@ -301,11 +303,11 @@ All five share the same skeleton:
   product.
 - Generic pieces, and how they differ:
 
-| helper | wh | fl | au | li | en |
-|---|---|---|---|---|---|
-| segment encoding of variable parts | none (validated instead; wh 543e1fa validates idempotency keys) | none | `encodeURIComponent` + `~`→`%7E` | `encodeURIComponent` | `encodeURIComponent` |
-| `lastSegment` | raw | raw | raw + separate `decodeSegment` | decoded | decoded |
-| zero-padded sortable leaf | `dueKey` 13-digit ms + `~id`, `parseDueKey` | – | `padSeq` (12), `padMs` (13), `indexLeaf`/`parseIndexLeaf` (same `ms~id` shape as wh) | – | – |
+| helper                             | wh                                                              | fl   | au                                                                                   | li                   | en                   |
+| ---------------------------------- | --------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------ | -------------------- | -------------------- |
+| segment encoding of variable parts | none (validated instead; wh 543e1fa validates idempotency keys) | none | `encodeURIComponent` + `~`→`%7E`                                                     | `encodeURIComponent` | `encodeURIComponent` |
+| `lastSegment`                      | raw                                                             | raw  | raw + separate `decodeSegment`                                                       | decoded              | decoded              |
+| zero-padded sortable leaf          | `dueKey` 13-digit ms + `~id`, `parseDueKey`                     | –    | `padSeq` (12), `padMs` (13), `indexLeaf`/`parseIndexLeaf` (same `ms~id` shape as wh) | –                    | –                    |
 
 - **Kit candidates:**
   - `encodeSegment` (au's variant; `~` matters because both wh and au use `~` as a leaf separator).
@@ -316,18 +318,18 @@ All five share the same skeleton:
 
 ## 3. Capability matrix (who implements what today)
 
-| driver | wh | fl | au | li | en |
-|---|---|---|---|---|---|
-| memory | watch, CAS, claimDue | watch | watch, CAS, eventlog | watch, CAS | watch, CAS |
-| file | watch | watch | watch | watch | watch, CAS (in-process) |
-| sqlite | – | – | eventlog | CAS | CAS |
-| libsql | – | – | eventlog | CAS | CAS |
-| postgres | – | – | eventlog | CAS | CAS |
-| mongodb | – | – | eventlog | CAS | CAS |
-| redis / redisJSON | watch, claimDue | watch | watch, CAS | watch, CAS | watch, CAS |
-| drizzle | – | – | eventlog (pg/mysql/sqlite) | CAS (pg/sqlite only) | CAS (pg/mysql/sqlite) |
-| cloudflare-kv | – | – | – | – | – |
-| unstorage | – | – | – | – | – |
+| driver            | wh                   | fl    | au                         | li                   | en                      |
+| ----------------- | -------------------- | ----- | -------------------------- | -------------------- | ----------------------- |
+| memory            | watch, CAS, claimDue | watch | watch, CAS, eventlog       | watch, CAS           | watch, CAS              |
+| file              | watch                | watch | watch                      | watch                | watch, CAS (in-process) |
+| sqlite            | –                    | –     | eventlog                   | CAS                  | CAS                     |
+| libsql            | –                    | –     | eventlog                   | CAS                  | CAS                     |
+| postgres          | –                    | –     | eventlog                   | CAS                  | CAS                     |
+| mongodb           | –                    | –     | eventlog                   | CAS                  | CAS                     |
+| redis / redisJSON | watch, claimDue      | watch | watch, CAS                 | watch, CAS           | watch, CAS              |
+| drizzle           | –                    | –     | eventlog (pg/mysql/sqlite) | CAS (pg/sqlite only) | CAS (pg/mysql/sqlite)   |
+| cloudflare-kv     | –                    | –     | –                          | –                    | –                       |
+| unstorage         | –                    | –     | –                          | –                    | –                       |
 
 - `transaction`: no driver, anywhere.
 - watch for the other drivers comes from `withWatch` in all repos.
@@ -337,44 +339,45 @@ All five share the same skeleton:
 Verified in code, not from commit messages.
 
 **Legend.** ✓ = has it. ✗ = lacks it. n/a = not applicable.
+
 - (born) = the copy was written after the fix with the fix already in place (no `fix` commit).
 - (au/li only) etc. = the fix exists only in those copies; there is no fix commit.
 
 ### Known storage fixes
 
-| # | fix (origin commits) | wh | fl | au | li | en |
-|---|---|---|---|---|---|---|
-| F1 | MySQL key column `utf8mb4_bin` (wh e4b0dc1, fl c9d27ae, li 8a577b5) | ✓ | ✓ | ✓ (born) | ✓ | ✓ (born) |
-| F2 | drizzle `LIKE … ESCAPE '!'`, not `'\'` (MySQL syntax error) (same commits) | ✓ | ✓ | ✓ (`sql.ts:60`) | ✓ | ✓ (`util.ts:30`) |
-| F3 | SQL getKeys literal prefix: `%`/`_` escaped + exact `startsWith` filter (sqlite/libsql/postgres/drizzle) (wh e4b0dc1, fl c9d27ae, au 55ab3d9, li 8a577b5) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| F4 | file driver case-safe reversible segment encoding (same + au 55ab3d9) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| F4b | migration path for pre-F4 file stores | ✓ `migrateFileStorage` + warn | ✓ read-through | n/a | n/a | n/a |
-| F5 | unstorage lossless escaping of `% ? \ :` (wh e4b0dc1, fl c9d27ae, au 55ab3d9, li 0502400) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| F6 | unstorage getKeys = plain string prefix: list from last `/` + filter (wh e4b0dc1, fl c9d27ae, au 6d4114c, li 0502400) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| F7 | Redis SCAN MATCH escaping `* ? [ ] \` (wh e4b0dc1, fl c9d27ae) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| F8 | Redis getKeys exact `startsWith` post-filter (wh e4b0dc1, fl c9d27ae, au ed8bc48) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| F9 | drizzle-orm 1.0-beta: `DrizzleKvTable` return type + peer `>=0.44.0 \|\| >=1.0.0-0` (fl 8397b69) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| F10 | redis watch test runs `CONFIG SET notify-keyspace-events KEA` itself (fl b32f043) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| #   | fix (origin commits)                                                                                                                                      | wh                            | fl             | au              | li  | en               |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | -------------- | --------------- | --- | ---------------- |
+| F1  | MySQL key column `utf8mb4_bin` (wh e4b0dc1, fl c9d27ae, li 8a577b5)                                                                                       | ✓                             | ✓              | ✓ (born)        | ✓   | ✓ (born)         |
+| F2  | drizzle `LIKE … ESCAPE '!'`, not `'\'` (MySQL syntax error) (same commits)                                                                                | ✓                             | ✓              | ✓ (`sql.ts:60`) | ✓   | ✓ (`util.ts:30`) |
+| F3  | SQL getKeys literal prefix: `%`/`_` escaped + exact `startsWith` filter (sqlite/libsql/postgres/drizzle) (wh e4b0dc1, fl c9d27ae, au 55ab3d9, li 8a577b5) | ✓                             | ✓              | ✓               | ✓   | ✓                |
+| F4  | file driver case-safe reversible segment encoding (same + au 55ab3d9)                                                                                     | ✓                             | ✓              | ✓               | ✓   | ✓                |
+| F4b | migration path for pre-F4 file stores                                                                                                                     | ✓ `migrateFileStorage` + warn | ✓ read-through | n/a             | n/a | n/a              |
+| F5  | unstorage lossless escaping of `% ? \ :` (wh e4b0dc1, fl c9d27ae, au 55ab3d9, li 0502400)                                                                 | ✓                             | ✓              | ✓               | ✓   | ✓                |
+| F6  | unstorage getKeys = plain string prefix: list from last `/` + filter (wh e4b0dc1, fl c9d27ae, au 6d4114c, li 0502400)                                     | ✓                             | ✓              | ✓               | ✓   | ✓                |
+| F7  | Redis SCAN MATCH escaping `* ? [ ] \` (wh e4b0dc1, fl c9d27ae)                                                                                            | ✓                             | ✓              | ✓               | ✓   | ✓                |
+| F8  | Redis getKeys exact `startsWith` post-filter (wh e4b0dc1, fl c9d27ae, au ed8bc48)                                                                         | ✓                             | ✓              | ✓               | ✓   | ✓                |
+| F9  | drizzle-orm 1.0-beta: `DrizzleKvTable` return type + peer `>=0.44.0 \|\| >=1.0.0-0` (fl 8397b69)                                                          | ✓                             | ✓              | ✓               | ✓   | ✓                |
+| F10 | redis watch test runs `CONFIG SET notify-keyspace-events KEA` itself (fl b32f043)                                                                         | ✓                             | ✓              | ✓               | ✓   | ✓                |
 
 ### Fixes present in some copies but missing elsewhere (no fix commit)
 
-| # | fix | wh | fl | au | li | en |
-|---|---|---|---|---|---|---|
-| O1 | file watch: `rename` reported as `remove` only when the file is gone | ✗ | ✗ | ✓ | ✓ | ✓ |
-| O2 | Redis watch `PSUBSCRIBE` pattern glob-escaped | ✗ | ✗ | ✓ | ✓ | ✓ |
-| O3 | Redis getKeys de-duplicates SCAN results | ✗ | ✗ | ✗ | ✓ | ✗ |
-| O4 | file: empty key segments encoded (`a//b` ≠ `a/b`) | ✗ | ✗ | ✗ | ✗ | ✓ |
-| O5 | file: atomic write (tmp + rename) | ✗ | ✗ | ✓ | ✗ | ✓ |
-| O6 | unstorage: `$` escaped (meta-key suffix hidden by `getKeys`) | ✗ | ✗ | ✗ | ✗ | ✓ |
-| O7 | postgres: failed DDL is retried, not cached as rejected | ✗ | ✗ | ✓ | ✗ | ✓ |
-| O7b | libsql: failed connect/DDL is retried | ✗ | ✗ | ✗ | ✗ | ✓ |
-| O8 | postgres key `COLLATE "C"` (index-usable `LIKE` prefix; bytewise) | ✗ | ✗ | ✗ (KV) | ✗ | ✓ |
-| O9 | SQLite getKeys via `GLOB` (case-sensitive, index-usable) | ✗ | ✗ | ✗ | ✗ | ✓ |
-| O10 | mongodb getKeys `startsWith` post-filter | ✗ | ✗ | ✗ | ✗ | ✓ |
-| O11 | canonical JSON on write, so CAS / equality is key-order-insensitive in SQL and Mongo | ✗ | ✗ | ✗ | ✗ (compares by re-reading instead) | ✓ |
-| O12 | Mongo CAS safe for `$`-prefixed value keys (`$expr`/`$literal`) | n/a | n/a | n/a | ✗ | ✓ |
-| O13 | CAS on MySQL drizzle | n/a | n/a | n/a | ✗ (omitted) | ✓ |
-| O14 | `deepEqual` checks `hasOwnProperty` | ✗ | n/a | ✗ | ✗ | ✓ `util.ts` (not used by en's `memory.ts`) |
+| #   | fix                                                                                  | wh  | fl  | au     | li                                 | en                                         |
+| --- | ------------------------------------------------------------------------------------ | --- | --- | ------ | ---------------------------------- | ------------------------------------------ |
+| O1  | file watch: `rename` reported as `remove` only when the file is gone                 | ✗   | ✗   | ✓      | ✓                                  | ✓                                          |
+| O2  | Redis watch `PSUBSCRIBE` pattern glob-escaped                                        | ✗   | ✗   | ✓      | ✓                                  | ✓                                          |
+| O3  | Redis getKeys de-duplicates SCAN results                                             | ✗   | ✗   | ✗      | ✓                                  | ✗                                          |
+| O4  | file: empty key segments encoded (`a//b` ≠ `a/b`)                                    | ✗   | ✗   | ✗      | ✗                                  | ✓                                          |
+| O5  | file: atomic write (tmp + rename)                                                    | ✗   | ✗   | ✓      | ✗                                  | ✓                                          |
+| O6  | unstorage: `$` escaped (meta-key suffix hidden by `getKeys`)                         | ✗   | ✗   | ✗      | ✗                                  | ✓                                          |
+| O7  | postgres: failed DDL is retried, not cached as rejected                              | ✗   | ✗   | ✓      | ✗                                  | ✓                                          |
+| O7b | libsql: failed connect/DDL is retried                                                | ✗   | ✗   | ✗      | ✗                                  | ✓                                          |
+| O8  | postgres key `COLLATE "C"` (index-usable `LIKE` prefix; bytewise)                    | ✗   | ✗   | ✗ (KV) | ✗                                  | ✓                                          |
+| O9  | SQLite getKeys via `GLOB` (case-sensitive, index-usable)                             | ✗   | ✗   | ✗      | ✗                                  | ✓                                          |
+| O10 | mongodb getKeys `startsWith` post-filter                                             | ✗   | ✗   | ✗      | ✗                                  | ✓                                          |
+| O11 | canonical JSON on write, so CAS / equality is key-order-insensitive in SQL and Mongo | ✗   | ✗   | ✗      | ✗ (compares by re-reading instead) | ✓                                          |
+| O12 | Mongo CAS safe for `$`-prefixed value keys (`$expr`/`$literal`)                      | n/a | n/a | n/a    | ✗                                  | ✓                                          |
+| O13 | CAS on MySQL drizzle                                                                 | n/a | n/a | n/a    | ✗ (omitted)                        | ✓                                          |
+| O14 | `deepEqual` checks `hasOwnProperty`                                                  | ✗   | n/a | ✗      | ✗                                  | ✓ `util.ts` (not used by en's `memory.ts`) |
 
 Related, but not storage code: wh 5b151c1 makes the core's idempotency comparison canonical
 (`src/canonical.ts`). O11 is the storage-side counterpart in en. wh 543e1fa validates
@@ -383,6 +386,7 @@ idempotency-key segments; the file driver's F4 encoding makes path traversal imp
 ## 5. Generic vs product-specific, and the seams the kit needs
 
 **Generic (move to the kit):**
+
 - The contract and `is*` guards.
 - All ten KV drivers (en's as the base) and `withWatch`/`pgListenNotify`.
 - `DrizzleKvTable` + the KV table factories.
@@ -396,6 +400,7 @@ idempotency-key segments; the file driver's F4 encoding makes path traversal imp
 - The conformance suite.
 
 **Product-specific (stays in the product):**
+
 - wh `DeliveryQueueStorage`/`claimDue`: the memory scan and the redis due zset + Lua.
 - au `EventLogStorage` + `ChainConflictError`, `sql.ts` event DDL/query compilation,
   `sqlite-event-log.ts`, and the drizzle event tables.
@@ -403,6 +408,7 @@ idempotency-key segments; the file driver's F4 encoding makes path traversal imp
 - All `keys.ts` layouts.
 
 **Candidates for generic capabilities later:**
+
 - en's `CounterStore` (`src/counters/*`). An atomic bounded add + claim/release with expiry, with 9
   drivers. li keeps an "approximate click counter" in KV (`li:src/keys.ts:97`), so a generic counter
   port would serve it too.
@@ -411,6 +417,7 @@ idempotency-key segments; the file driver's F4 encoding makes path traversal imp
   `Delivery`.
 
 **Seams and parameters the kit must take:**
+
 - **Package name / product id:**
   - `requirePeer` message.
   - Log prefixes (`[@xtandard/X]`).
@@ -432,33 +439,33 @@ All suites import from `vitest`, and also run under `bun test` for the `*.bun.te
 The suite signature is the same in every repo: `runStorageContractTests(name, make, opts?)`. Options
 per repo:
 
-| repo | `opts` |
-|---|---|
-| wh | `{deliveryQueue}` |
-| fl | none |
-| au | `{expectNativeEventLog, timeout}` |
-| li | `{compareAndSwap, watch: bool \| {settleMs}}` |
-| en | `{compareAndSwap}` |
+| repo | `opts`                                        |
+| ---- | --------------------------------------------- |
+| wh   | `{deliveryQueue}`                             |
+| fl   | none                                          |
+| au   | `{expectNativeEventLog, timeout}`             |
+| li   | `{compareAndSwap, watch: bool \| {settleMs}}` |
+| en   | `{compareAndSwap}`                            |
 
 ### Cases per copy
 
-| case | wh | fl | au | li | en |
-|---|---|---|---|---|---|
-| missing → null; object/primitive round-trip; overwrite; remove; remove-missing no-op | ✓ | ✓ | ✓ | ✓ (+ arrays) | ✓ |
-| nested getKeys + prefix isolation | ✓ | ✓ | ✓ | ✓ | ✓ |
-| empty getKeys | ✓ | ✓ | ✗ | ✓ | ✗ |
-| case-distinct keys | ✓ | ✓ | ✓ | ✓ | ✓ |
-| accent-distinct keys | ✓ | ✓ | ✓ | ✓ | ✓ (raw + encoded) |
-| literal LIKE/GLOB metachars in prefixes | `% _ ! * [ ] ? \` | same | `% _ ! * [ ] ? \ : %25` | `% _ ! \ * ? [ ] : %25` | `% _ ! \ * [` |
-| `? \ ] : %` / `%25` keys round-trip and stay distinct | ✓ | ✓ (`? \ :`) | ✓ (via the prefix test's keys) | ✓ | ✓ (`? \ ] : #`) |
-| plain prefix ending mid-segment | ✓ | ✓ | ✓ | implicit (`getKeys("lnk/x")`) | ✓ |
-| case-distinct tenants isolated | ✓ | ✗ | ✓ (event chains) | ✓ | ✗ |
-| zero-padded keys sort lexicographically | ✓ (due) | ✗ | ✓ (seq) | ✗ | ✗ |
-| unicode / encoded keys | ✗ | ✗ | ✗ | ✓ | ✗ |
-| many keys (pagination) | ✗ | ✗ | ✗ | ✓ | ✗ |
-| CAS semantics + concurrent claim (exactly one wins) | ✗ | ✗ | ✗ (own CAS tests per driver) | ✓ | ✓ |
-| watch semantics | ✗ (separate tests) | ✗ | ✗ | ✓ | ✗ |
-| product suites | claimDue ×5 | – | event log ×16 + `appendEvents` stale-seq | – | – |
+| case                                                                                 | wh                 | fl          | au                                       | li                            | en                |
+| ------------------------------------------------------------------------------------ | ------------------ | ----------- | ---------------------------------------- | ----------------------------- | ----------------- |
+| missing → null; object/primitive round-trip; overwrite; remove; remove-missing no-op | ✓                  | ✓           | ✓                                        | ✓ (+ arrays)                  | ✓                 |
+| nested getKeys + prefix isolation                                                    | ✓                  | ✓           | ✓                                        | ✓                             | ✓                 |
+| empty getKeys                                                                        | ✓                  | ✓           | ✗                                        | ✓                             | ✗                 |
+| case-distinct keys                                                                   | ✓                  | ✓           | ✓                                        | ✓                             | ✓                 |
+| accent-distinct keys                                                                 | ✓                  | ✓           | ✓                                        | ✓                             | ✓ (raw + encoded) |
+| literal LIKE/GLOB metachars in prefixes                                              | `% _ ! * [ ] ? \`  | same        | `% _ ! * [ ] ? \ : %25`                  | `% _ ! \ * ? [ ] : %25`       | `% _ ! \ * [`     |
+| `? \ ] : %` / `%25` keys round-trip and stay distinct                                | ✓                  | ✓ (`? \ :`) | ✓ (via the prefix test's keys)           | ✓                             | ✓ (`? \ ] : #`)   |
+| plain prefix ending mid-segment                                                      | ✓                  | ✓           | ✓                                        | implicit (`getKeys("lnk/x")`) | ✓                 |
+| case-distinct tenants isolated                                                       | ✓                  | ✗           | ✓ (event chains)                         | ✓                             | ✗                 |
+| zero-padded keys sort lexicographically                                              | ✓ (due)            | ✗           | ✓ (seq)                                  | ✗                             | ✗                 |
+| unicode / encoded keys                                                               | ✗                  | ✗           | ✗                                        | ✓                             | ✗                 |
+| many keys (pagination)                                                               | ✗                  | ✗           | ✗                                        | ✓                             | ✗                 |
+| CAS semantics + concurrent claim (exactly one wins)                                  | ✗                  | ✗           | ✗ (own CAS tests per driver)             | ✓                             | ✓                 |
+| watch semantics                                                                      | ✗ (separate tests) | ✗           | ✗                                        | ✓                             | ✗                 |
+| product suites                                                                       | claimDue ×5        | –           | event log ×16 + `appendEvents` stale-seq | –                             | –                 |
 
 ### Drivers that run the shared suite
 
@@ -512,6 +519,7 @@ per repo:
 ### Subpaths (package.json `"exports"`)
 
 Identical in all five:
+
 - `./storage/{cloudflare-kv,drizzle,file,libsql,memory,mongodb,postgres,redis,sqlite,unstorage}`
 - `./drizzle/{mysql,pg,sqlite}`
 
@@ -538,7 +546,7 @@ Peer deps are identical in all five (all optional): `@libsql/client@0.15.15`,
 
 - `createMemoryStorage` / `MemoryStorageOptions` / `MemoryXStorage` (not in fl).
 - `createFileStorage`, `clearFileStorage`, `FileStorageOptions`, `encodeSegment`, `decodeSegment`
-  (`migrateFileStorage` wh only; `FileXStorage` en only; en's narrowed entry does *not* export
+  (`migrateFileStorage` wh only; `FileXStorage` en only; en's narrowed entry does _not_ export
   `encodeSegment`/`decodeSegment`).
 - `createSqliteStorage`/`SqliteXStorage`.
 - `createLibsqlStorage`/`LibsqlXStorage`.

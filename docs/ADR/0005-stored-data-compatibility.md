@@ -8,11 +8,13 @@
 
 The best driver copies (mostly en's) change some on-disk or on-wire representations compared with the
 older copies:
+
 - canonical JSON on write;
 - `$` escaping for unstorage;
 - empty-segment encoding for file keys.
 
 The copies also have different persisted defaults:
+
 - table names `xtandard_X` and `xtandard_X_kv`;
 - Mongo database and collection names;
 - the pg notify channel;

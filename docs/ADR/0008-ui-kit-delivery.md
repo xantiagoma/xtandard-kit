@@ -9,6 +9,7 @@
 Each product bundles its admin SPA into `dist/ui` and its React embed into `dist/react.js` with Vite.
 It uses Tailwind v4, and the embed CSS is scoped by `scope-embed-css`. The shared UI pieces must work
 inside both bundles. They also carry product seams:
+
 - the scope class `.xtandard-<p>`;
 - the config global `__<P>_CONFIG__`;
 - the theme storage key `xtandard-<p>:theme`;

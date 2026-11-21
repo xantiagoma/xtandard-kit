@@ -1,0 +1,196 @@
+# Reusable CI for the xtandard products (ADR 0009). Callers:
+#
+#   jobs:
+#     ci:
+#       uses: xantiagoma/xtandard-kit/.github/workflows/ci.yml@v0.1
+#       with: { db-name: webhooks, typecheck-examples: true, e2e: true }
+#
+# A service is skipped when its image input is empty (GitHub skips services with an empty image).
+name: CI (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      bun-version:
+        type: string
+        default: "1.3.14"
+      redis-image:
+        description: "Redis image ('' to skip). redis:8 has RedisJSON built in."
+        type: string
+        default: "redis:8"
+      mongo-image:
+        type: string
+        default: "mongo:7"
+      postgres-image:
+        type: string
+        default: "postgres:16"
+      mysql-image:
+        type: string
+        default: "mysql:8"
+      clickhouse-image:
+        type: string
+        default: ""
+      db-name:
+        description: "Database name for Postgres/MySQL (usually the product name)."
+        type: string
+        default: "xtandard"
+      coverage:
+        description: "Run `test:coverage` (enforces thresholds) instead of `test`."
+        type: boolean
+        default: true
+      test-bun:
+        type: boolean
+        default: true
+      typecheck-examples:
+        type: boolean
+        default: false
+      build:
+        type: boolean
+        default: true
+      e2e:
+        description: "Run the Playwright browser e2e job (`test:e2e`)."
+        type: boolean
+        default: false
+      extra-env:
+        description: 'Extra environment as a JSON object, e.g. {"FOO":"1"}.'
+        type: string
+        default: "{}"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: ${{ inputs.redis-image }}
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      mongo:
+        image: ${{ inputs.mongo-image }}
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\")' --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      postgres:
+        image: ${{ inputs.postgres-image }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ${{ inputs.db-name }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      mysql:
+        image: ${{ inputs.mysql-image }}
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: ${{ inputs.db-name }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      clickhouse:
+        image: ${{ inputs.clickhouse-image }}
+        ports:
+          - 8123:8123
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+
+      - name: Service URLs (only for the services that run)
+        env:
+          REDIS: ${{ inputs.redis-image }}
+          MONGO: ${{ inputs.mongo-image }}
+          POSTGRES: ${{ inputs.postgres-image }}
+          MYSQL: ${{ inputs.mysql-image }}
+          CLICKHOUSE: ${{ inputs.clickhouse-image }}
+          DB: ${{ inputs.db-name }}
+          EXTRA: ${{ inputs.extra-env }}
+        run: |
+          {
+            if [ -n "$REDIS" ]; then
+              echo "REDIS_URL=redis://localhost:6379"
+              case "$REDIS" in redis:[89]*|redis/redis-stack*) echo "REDIS_JSON_URL=redis://localhost:6379";; esac
+            fi
+            [ -n "$MONGO" ] && echo "MONGO_URL=mongodb://localhost:27017"
+            [ -n "$POSTGRES" ] && echo "POSTGRES_URL=postgres://postgres:postgres@localhost:5432/$DB"
+            [ -n "$MYSQL" ] && echo "MYSQL_URL=mysql://root:root@127.0.0.1:3306/$DB"
+            [ -n "$CLICKHOUSE" ] && echo "CLICKHOUSE_URL=http://localhost:8123"
+            echo "$EXTRA" | jq -r 'to_entries[] | "\(.key)=\(.value)"'
+          } >> "$GITHUB_ENV"
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Typecheck examples
+        if: inputs.typecheck-examples
+        run: bun run typecheck:examples
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Format check
+        run: bun run format:check
+
+      - name: Test + coverage (live backends; enforces thresholds)
+        if: inputs.coverage
+        run: bun run test:coverage
+
+      - name: Test (live backends)
+        if: ${{ !inputs.coverage }}
+        run: bun run test
+
+      - name: Test (bun:sqlite, native bun test)
+        if: inputs.test-bun
+        run: bun run test:bun
+
+      - name: Build
+        if: inputs.build
+        run: bun run build
+
+      - name: publint
+        if: inputs.build
+        run: bunx publint
+
+      - name: Pack check
+        if: inputs.build
+        run: bun pm pack --dry-run
+
+  browser-e2e:
+    if: inputs.e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
+      - name: Browser e2e
+        run: bun run test:e2e
+        env:
+          CI: "true"

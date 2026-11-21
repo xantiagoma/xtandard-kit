@@ -1,0 +1,679 @@
+{
+  "name": "@xtandard/kit",
+  "version": "0.0.0",
+  "description": "The shared building blocks of the xtandard products: KV storage contract, drivers and conformance suite, auth/authorization, HTTP panel plumbing, framework adapters, scoped tokens, CLI plumbing, the React admin shell, docs-site and build tooling.",
+  "keywords": [
+    "auth",
+    "authorization",
+    "bun",
+    "cloudflare-kv",
+    "conformance",
+    "drizzle",
+    "elysia",
+    "express",
+    "hono",
+    "kv",
+    "libsql",
+    "mongodb",
+    "postgres",
+    "react",
+    "redis",
+    "sqlite",
+    "storage",
+    "typescript",
+    "unstorage",
+    "xtandard"
+  ],
+  "homepage": "https://me.xantiagoma.com/xtandard-kit/",
+  "bugs": {
+    "url": "https://github.com/xantiagoma/xtandard-kit/issues"
+  },
+  "license": "MIT",
+  "author": "Santiago Montoya (https://me.xantiagoma.com)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xantiagoma/xtandard-kit.git"
+  },
+  "bin": {
+    "xtandard-kit": "bin/xtandard-kit.mjs"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "tsconfig",
+    "LICENSE",
+    "README.md"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./storage": {
+      "import": {
+        "types": "./dist/entry-storage.d.mts",
+        "default": "./dist/entry-storage.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage.d.cts",
+        "default": "./dist/entry-storage.cjs"
+      }
+    },
+    "./storage/memory": {
+      "import": {
+        "types": "./dist/entry-storage-memory.d.mts",
+        "default": "./dist/entry-storage-memory.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-memory.d.cts",
+        "default": "./dist/entry-storage-memory.cjs"
+      }
+    },
+    "./storage/file": {
+      "import": {
+        "types": "./dist/entry-storage-file.d.mts",
+        "default": "./dist/entry-storage-file.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-file.d.cts",
+        "default": "./dist/entry-storage-file.cjs"
+      }
+    },
+    "./storage/sqlite": {
+      "import": {
+        "types": "./dist/entry-storage-sqlite.d.mts",
+        "default": "./dist/entry-storage-sqlite.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-sqlite.d.cts",
+        "default": "./dist/entry-storage-sqlite.cjs"
+      }
+    },
+    "./storage/sqlite/internals": {
+      "import": {
+        "types": "./dist/entry-storage-sqlite-internals.d.mts",
+        "default": "./dist/entry-storage-sqlite-internals.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-sqlite-internals.d.cts",
+        "default": "./dist/entry-storage-sqlite-internals.cjs"
+      }
+    },
+    "./storage/libsql": {
+      "import": {
+        "types": "./dist/entry-storage-libsql.d.mts",
+        "default": "./dist/entry-storage-libsql.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-libsql.d.cts",
+        "default": "./dist/entry-storage-libsql.cjs"
+      }
+    },
+    "./storage/libsql/internals": {
+      "import": {
+        "types": "./dist/entry-storage-libsql-internals.d.mts",
+        "default": "./dist/entry-storage-libsql-internals.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-libsql-internals.d.cts",
+        "default": "./dist/entry-storage-libsql-internals.cjs"
+      }
+    },
+    "./storage/postgres": {
+      "import": {
+        "types": "./dist/entry-storage-postgres.d.mts",
+        "default": "./dist/entry-storage-postgres.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-postgres.d.cts",
+        "default": "./dist/entry-storage-postgres.cjs"
+      }
+    },
+    "./storage/postgres/internals": {
+      "import": {
+        "types": "./dist/entry-storage-postgres-internals.d.mts",
+        "default": "./dist/entry-storage-postgres-internals.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-postgres-internals.d.cts",
+        "default": "./dist/entry-storage-postgres-internals.cjs"
+      }
+    },
+    "./storage/mongodb": {
+      "import": {
+        "types": "./dist/entry-storage-mongodb.d.mts",
+        "default": "./dist/entry-storage-mongodb.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-mongodb.d.cts",
+        "default": "./dist/entry-storage-mongodb.cjs"
+      }
+    },
+    "./storage/mongodb/internals": {
+      "import": {
+        "types": "./dist/entry-storage-mongodb-internals.d.mts",
+        "default": "./dist/entry-storage-mongodb-internals.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-mongodb-internals.d.cts",
+        "default": "./dist/entry-storage-mongodb-internals.cjs"
+      }
+    },
+    "./storage/redis": {
+      "import": {
+        "types": "./dist/entry-storage-redis.d.mts",
+        "default": "./dist/entry-storage-redis.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-redis.d.cts",
+        "default": "./dist/entry-storage-redis.cjs"
+      }
+    },
+    "./storage/redis/internals": {
+      "import": {
+        "types": "./dist/entry-storage-redis-internals.d.mts",
+        "default": "./dist/entry-storage-redis-internals.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-redis-internals.d.cts",
+        "default": "./dist/entry-storage-redis-internals.cjs"
+      }
+    },
+    "./storage/cloudflare-kv": {
+      "import": {
+        "types": "./dist/entry-storage-cloudflare-kv.d.mts",
+        "default": "./dist/entry-storage-cloudflare-kv.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-cloudflare-kv.d.cts",
+        "default": "./dist/entry-storage-cloudflare-kv.cjs"
+      }
+    },
+    "./storage/unstorage": {
+      "import": {
+        "types": "./dist/entry-storage-unstorage.d.mts",
+        "default": "./dist/entry-storage-unstorage.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-unstorage.d.cts",
+        "default": "./dist/entry-storage-unstorage.cjs"
+      }
+    },
+    "./storage/drizzle": {
+      "import": {
+        "types": "./dist/entry-storage-drizzle.d.mts",
+        "default": "./dist/entry-storage-drizzle.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-drizzle.d.cts",
+        "default": "./dist/entry-storage-drizzle.cjs"
+      }
+    },
+    "./storage/drizzle/internals": {
+      "import": {
+        "types": "./dist/entry-storage-drizzle-internals.d.mts",
+        "default": "./dist/entry-storage-drizzle-internals.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-drizzle-internals.d.cts",
+        "default": "./dist/entry-storage-drizzle-internals.cjs"
+      }
+    },
+    "./storage/testing": {
+      "import": {
+        "types": "./dist/entry-storage-testing.d.mts",
+        "default": "./dist/entry-storage-testing.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-storage-testing.d.cts",
+        "default": "./dist/entry-storage-testing.cjs"
+      }
+    },
+    "./drizzle/pg": {
+      "import": {
+        "types": "./dist/entry-drizzle-pg.d.mts",
+        "default": "./dist/entry-drizzle-pg.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-drizzle-pg.d.cts",
+        "default": "./dist/entry-drizzle-pg.cjs"
+      }
+    },
+    "./drizzle/mysql": {
+      "import": {
+        "types": "./dist/entry-drizzle-mysql.d.mts",
+        "default": "./dist/entry-drizzle-mysql.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-drizzle-mysql.d.cts",
+        "default": "./dist/entry-drizzle-mysql.cjs"
+      }
+    },
+    "./drizzle/sqlite": {
+      "import": {
+        "types": "./dist/entry-drizzle-sqlite.d.mts",
+        "default": "./dist/entry-drizzle-sqlite.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-drizzle-sqlite.d.cts",
+        "default": "./dist/entry-drizzle-sqlite.cjs"
+      }
+    },
+    "./auth": {
+      "import": {
+        "types": "./dist/entry-auth.d.mts",
+        "default": "./dist/entry-auth.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-auth.d.cts",
+        "default": "./dist/entry-auth.cjs"
+      }
+    },
+    "./auth/none": {
+      "import": {
+        "types": "./dist/entry-auth-none.d.mts",
+        "default": "./dist/entry-auth-none.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-auth-none.d.cts",
+        "default": "./dist/entry-auth-none.cjs"
+      }
+    },
+    "./auth/basic": {
+      "import": {
+        "types": "./dist/entry-auth-basic.d.mts",
+        "default": "./dist/entry-auth-basic.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-auth-basic.d.cts",
+        "default": "./dist/entry-auth-basic.cjs"
+      }
+    },
+    "./auth/delegated": {
+      "import": {
+        "types": "./dist/entry-auth-delegated.d.mts",
+        "default": "./dist/entry-auth-delegated.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-auth-delegated.d.cts",
+        "default": "./dist/entry-auth-delegated.cjs"
+      }
+    },
+    "./authorization": {
+      "import": {
+        "types": "./dist/entry-authorization.d.mts",
+        "default": "./dist/entry-authorization.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-authorization.d.cts",
+        "default": "./dist/entry-authorization.cjs"
+      }
+    },
+    "./authorization/none": {
+      "import": {
+        "types": "./dist/entry-authorization-none.d.mts",
+        "default": "./dist/entry-authorization-none.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-authorization-none.d.cts",
+        "default": "./dist/entry-authorization-none.cjs"
+      }
+    },
+    "./authorization/roles": {
+      "import": {
+        "types": "./dist/entry-authorization-roles.d.mts",
+        "default": "./dist/entry-authorization-roles.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-authorization-roles.d.cts",
+        "default": "./dist/entry-authorization-roles.cjs"
+      }
+    },
+    "./authorization/delegated": {
+      "import": {
+        "types": "./dist/entry-authorization-delegated.d.mts",
+        "default": "./dist/entry-authorization-delegated.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-authorization-delegated.d.cts",
+        "default": "./dist/entry-authorization-delegated.cjs"
+      }
+    },
+    "./hooks": {
+      "import": {
+        "types": "./dist/entry-hooks.d.mts",
+        "default": "./dist/entry-hooks.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-hooks.d.cts",
+        "default": "./dist/entry-hooks.cjs"
+      }
+    },
+    "./hooks/log": {
+      "import": {
+        "types": "./dist/entry-hooks-log.d.mts",
+        "default": "./dist/entry-hooks-log.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-hooks-log.d.cts",
+        "default": "./dist/entry-hooks-log.cjs"
+      }
+    },
+    "./server": {
+      "import": {
+        "types": "./dist/entry-server.d.mts",
+        "default": "./dist/entry-server.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-server.d.cts",
+        "default": "./dist/entry-server.cjs"
+      }
+    },
+    "./server/router": {
+      "import": {
+        "types": "./dist/entry-server-router.d.mts",
+        "default": "./dist/entry-server-router.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-server-router.d.cts",
+        "default": "./dist/entry-server-router.cjs"
+      }
+    },
+    "./tokens": {
+      "import": {
+        "types": "./dist/entry-tokens.d.mts",
+        "default": "./dist/entry-tokens.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-tokens.d.cts",
+        "default": "./dist/entry-tokens.cjs"
+      }
+    },
+    "./adapters/bun": {
+      "import": {
+        "types": "./dist/entry-adapters-bun.d.mts",
+        "default": "./dist/entry-adapters-bun.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-adapters-bun.d.cts",
+        "default": "./dist/entry-adapters-bun.cjs"
+      }
+    },
+    "./adapters/node": {
+      "import": {
+        "types": "./dist/entry-adapters-node.d.mts",
+        "default": "./dist/entry-adapters-node.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-adapters-node.d.cts",
+        "default": "./dist/entry-adapters-node.cjs"
+      }
+    },
+    "./adapters/express": {
+      "import": {
+        "types": "./dist/entry-adapters-express.d.mts",
+        "default": "./dist/entry-adapters-express.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-adapters-express.d.cts",
+        "default": "./dist/entry-adapters-express.cjs"
+      }
+    },
+    "./adapters/hono": {
+      "import": {
+        "types": "./dist/entry-adapters-hono.d.mts",
+        "default": "./dist/entry-adapters-hono.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-adapters-hono.d.cts",
+        "default": "./dist/entry-adapters-hono.cjs"
+      }
+    },
+    "./adapters/elysia": {
+      "import": {
+        "types": "./dist/entry-adapters-elysia.d.mts",
+        "default": "./dist/entry-adapters-elysia.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-adapters-elysia.d.cts",
+        "default": "./dist/entry-adapters-elysia.cjs"
+      }
+    },
+    "./adapters/next": {
+      "import": {
+        "types": "./dist/entry-adapters-next.d.mts",
+        "default": "./dist/entry-adapters-next.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-adapters-next.d.cts",
+        "default": "./dist/entry-adapters-next.cjs"
+      }
+    },
+    "./cli": {
+      "import": {
+        "types": "./dist/entry-cli.d.mts",
+        "default": "./dist/entry-cli.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-cli.d.cts",
+        "default": "./dist/entry-cli.cjs"
+      }
+    },
+    "./util": {
+      "import": {
+        "types": "./dist/entry-util.d.mts",
+        "default": "./dist/entry-util.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-util.d.cts",
+        "default": "./dist/entry-util.cjs"
+      }
+    },
+    "./testing": {
+      "import": {
+        "types": "./dist/entry-testing.d.mts",
+        "default": "./dist/entry-testing.mjs"
+      },
+      "require": {
+        "types": "./dist/entry-testing.d.cts",
+        "default": "./dist/entry-testing.cjs"
+      }
+    },
+    "./ui": {
+      "types": "./dist/entry-ui.d.mts",
+      "default": "./dist/entry-ui.mjs"
+    },
+    "./ui/embed": {
+      "types": "./dist/entry-ui-embed.d.mts",
+      "default": "./dist/entry-ui-embed.mjs"
+    },
+    "./build": {
+      "types": "./dist/entry-build.d.mts",
+      "default": "./dist/entry-build.mjs"
+    },
+    "./site": {
+      "types": "./dist/entry-site.d.mts",
+      "default": "./dist/entry-site.mjs"
+    },
+    "./ui/styles.css": "./dist/ui/styles.css",
+    "./tsconfig/*": "./tsconfig/*",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack && bun scripts/build-ui-assets.ts",
+    "test": "vp test run",
+    "test:coverage": "vp test run --coverage",
+    "test:bun": "bun test ./test/*.bun.test.ts",
+    "test:e2e": "playwright test",
+    "lint": "vp lint",
+    "format": "vp fmt",
+    "format:check": "vp fmt --check",
+    "typecheck": "tsc --noEmit",
+    "check": "bun scripts/subpaths.ts --check && vp lint && vp fmt --check && bun run typecheck",
+    "prepare": "husky || true",
+    "docs:dev": "cd site && bun install && bun run dev",
+    "docs:build": "cd site && bun install && bun run build",
+    "docs:preview": "cd site && bun run preview",
+    "release": "changelogen --release --push"
+  },
+  "dependencies": {
+    "valibot": "^1.0.0"
+  },
+  "devDependencies": {
+    "@astrojs/starlight": "0.43.1",
+    "@base-ui-components/react": "1.0.0-rc.0",
+    "@electric-sql/pglite": "^0.2.0",
+    "@libsql/client": "0.15.15",
+    "@playwright/test": "^1.49.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@tanstack/react-query": "^5.62.0",
+    "@testing-library/react": "^16.1.0",
+    "@types/bun": "^1.1.14",
+    "@types/express": "^5.0.0",
+    "@types/pg": "^8.11.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^4.1.6",
+    "astro": "7.4.13",
+    "changelogen": "^0.6.2",
+    "clsx": "^2.1",
+    "drizzle-orm": "^0.45.2",
+    "elysia": "^1.4",
+    "elysia-v2": "npm:elysia@2.0.0-rc.0",
+    "express": "^5.0.0",
+    "happy-dom": "^15.11.0",
+    "hono": "^4.6.0",
+    "husky": "^9.1.7",
+    "lucide-react": "^1.22",
+    "mongodb": "^6.10.0",
+    "mysql2": "^3.24.6",
+    "pg": "^8.13.0",
+    "playwright": "^1.49.0",
+    "postcss": "^8.5.16",
+    "postcss-prefix-selector": "^2.1.1",
+    "publint": "^0.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "redis": "^5.0.0",
+    "tailwind-merge": "^3.6",
+    "tailwindcss": "^4.0.0",
+    "typedoc": "0.28.20",
+    "typescript": "^5.7.0",
+    "unstorage": "^1.13.0",
+    "vite": "^6.0.0",
+    "vite-plus": "^0.1.22",
+    "wouter": "^3.10.0"
+  },
+  "peerDependencies": {
+    "@astrojs/starlight": ">=0.43.0",
+    "@base-ui-components/react": "1.0.0-rc.0",
+    "@libsql/client": "0.15.15",
+    "@tanstack/react-query": "^5.0.0",
+    "astro": ">=7.0.0",
+    "clsx": "^2.0.0",
+    "drizzle-orm": ">=0.44.0 || >=1.0.0-0",
+    "elysia": "^1.0.0 || ^2.0.0-0",
+    "express": "^4.0.0 || ^5.0.0",
+    "hono": "^4.0.0",
+    "lucide-react": ">=0.400.0",
+    "mongodb": "^5.0.0 || ^6.0.0",
+    "pg": "^8.0.0",
+    "postcss": "^8.0.0",
+    "postcss-prefix-selector": "^2.0.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "redis": "^4.0.0 || ^5.0.0",
+    "tailwind-merge": "^2.0.0 || ^3.0.0",
+    "typedoc": ">=0.28.0",
+    "unstorage": "^1.0.0",
+    "wouter": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@astrojs/starlight": {
+      "optional": true
+    },
+    "@base-ui-components/react": {
+      "optional": true
+    },
+    "@libsql/client": {
+      "optional": true
+    },
+    "@tanstack/react-query": {
+      "optional": true
+    },
+    "astro": {
+      "optional": true
+    },
+    "clsx": {
+      "optional": true
+    },
+    "drizzle-orm": {
+      "optional": true
+    },
+    "elysia": {
+      "optional": true
+    },
+    "express": {
+      "optional": true
+    },
+    "hono": {
+      "optional": true
+    },
+    "lucide-react": {
+      "optional": true
+    },
+    "mongodb": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "postcss": {
+      "optional": true
+    },
+    "postcss-prefix-selector": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "redis": {
+      "optional": true
+    },
+    "tailwind-merge": {
+      "optional": true
+    },
+    "typedoc": {
+      "optional": true
+    },
+    "unstorage": {
+      "optional": true
+    },
+    "wouter": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

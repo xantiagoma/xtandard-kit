@@ -7,6 +7,7 @@
 ## Context
 
 The copies differ in behaviour that users can observe through the HTTP API, the CLI or stored data:
+
 - the readonly status code: 403 in wh/fl/li, 423 in au/en;
 - validation of invalid integer query parameters;
 - the token prefixes `whpt_`, `audpt_`, `lvt_` and `entpt_`;
@@ -30,6 +31,7 @@ in others.
   - malformed `%` escapes don't cause a 500.
 
   Each product's migration PR lists these under "Fixed" in its CHANGELOG.
+
 - **Urgent security fixes are not held for the migration.** For example, the unknown `AUTH_MODE`
   fail-open was hot-fixed in the four affected products on 2026-11-21.
 

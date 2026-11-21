@@ -28,3 +28,15 @@
   - behaviour differences become parameters, while fixes are applied everywhere.
 - Researched trusted publishing with reusable workflows: npm validates the calling workflow, and
   publishing from inside a `workflow_call` is reported as fragile.
+
+## 2026-11-21 — Phase 3 step 0: skeleton
+
+- t1r approved the design, with two additions now in ADRs 0005, 0007 and 0009:
+  - Docker images need a rebuild with `refresh-kit` to pick up a kit patch;
+  - stored-data fixtures are permanent tests.
+- Skeleton mirrors flags:
+  - `scripts/subpaths.ts` is the single source of the 51 subpaths (exports, pack entries, stubs);
+  - toolchain: vite-plus, tsconfig, husky, mise;
+  - README with the ecosystem table, CLAUDE.md with the "how to add a fix once" note, CHANGELOG;
+  - reusable `ci.yml` plus the kit's own `kit-ci.yml`.
+- Local results: `check`, `test`, `vp pack` and `publint` are clean.

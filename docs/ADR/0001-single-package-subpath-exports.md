@@ -7,6 +7,7 @@
 ## Context
 
 The kit spans many kinds of code:
+
 - runtime code (storage drivers, auth, HTTP plumbing, adapters);
 - browser code (the React admin shell and embed);
 - build-time code (config factories, CSS scoping, docs-site tooling).
@@ -16,6 +17,7 @@ the user decided on one new package, `@xtandard/kit`, separate from `@xtandard/l
 zero-dependency.
 
 The options were:
+
 - several packages (`@xtandard/kit-storage`, `-ui`, `-site`…);
 - one package with one entry point;
 - one package with subpath exports.
@@ -23,6 +25,7 @@ The options were:
 ## Decision
 
 Ship **one package with explicit subpath exports**, mirroring flags and webhooks:
+
 - Each subpath is a thin `src/entry-*.ts`, built by `vp pack` into dual ESM/CJS with `.d.mts`/`.d.cts`.
 - The UI subpaths are ESM-only.
 - Every driver, framework and tool dependency is an **optional peer**, owned by exactly one subpath

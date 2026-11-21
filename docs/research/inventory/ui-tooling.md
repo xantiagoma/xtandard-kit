@@ -10,24 +10,24 @@ Everything below was checked by reading code or running small `diff`s, not taken
 
 ### A1. Files that are already identical (copy them into the kit as they are)
 
-| File | wh | fl | au | li | en | Status |
-|---|---|---|---|---|---|---|
-| `components/ui-bits.tsx` (Button, Badge, Avatar, Kbd) | 126 | 126 | 126 | 126 | 126 | byte-identical |
-| `components/Toast.tsx` (ToastProvider, useToast, Toast, ToastKind) | 130 | 130 | 130 | 130 | 130 | byte-identical |
-| `components/ThemeToggle.tsx` | 51 | 51 | 51 | 51 | 51 | byte-identical; imports `../theme.ts` (getThemePref/setThemePref) |
+| File                                                                                                    | wh  | fl  | au  | li  | en  | Status                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------- | --- | --- | --- | --- | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `components/ui-bits.tsx` (Button, Badge, Avatar, Kbd)                                                   | 126 | 126 | 126 | 126 | 126 | byte-identical                                                                                                                                                                                |
+| `components/Toast.tsx` (ToastProvider, useToast, Toast, ToastKind)                                      | 130 | 130 | 130 | 130 | 130 | byte-identical                                                                                                                                                                                |
+| `components/ThemeToggle.tsx`                                                                            | 51  | 51  | 51  | 51  | 51  | byte-identical; imports `../theme.ts` (getThemePref/setThemePref)                                                                                                                             |
 | `components/primitives.tsx` (ToggleSwitch, Segmented, Dropdown, CreatableCombobox, TextInput, TextArea) | 354 | 354 | 354 | 354 | 354 | identical. In fl the `portal-container` import is moved up two lines, nothing else. The file has a NUL sentinel (`"\0create"`, line 233), so `grep`/`file` treat it as binary: use `grep -a`. |
-| `lib/utils.ts` (`cn`) | 8 | 8 | 8 | 8 | 8 | byte-identical |
-| `lib/nav-guard.ts` (setNavBlocker/clearNavBlocker/canLeave) | 32 | 32 | 32 | 32 | 32 | byte-identical |
-| `lib/portal-container.ts` (setPortalContainerRef/portalContainerRef) | 34 | 34 | 34 | 34 | 34 | ≡names (only the `.xtandard-<p>` mention in a comment differs) |
+| `lib/utils.ts` (`cn`)                                                                                   | 8   | 8   | 8   | 8   | 8   | byte-identical                                                                                                                                                                                |
+| `lib/nav-guard.ts` (setNavBlocker/clearNavBlocker/canLeave)                                             | 32  | 32  | 32  | 32  | 32  | byte-identical                                                                                                                                                                                |
+| `lib/portal-container.ts` (setPortalContainerRef/portalContainerRef)                                    | 34  | 34  | 34  | 34  | 34  | ≡names (only the `.xtandard-<p>` mention in a comment differs)                                                                                                                                |
 
 Deps of this set: `@base-ui-components/react`, `lucide-react`, `clsx`, `tailwind-merge`, `react`. These are devDeps in every repo, because they get bundled into dist/ui and dist/react.js.
 
 ### A2. `theme.ts` (+ fl `lib/theme-context.tsx`)
 
-| | wh | fl | au | li | en |
-|---|---|---|---|---|---|
-| LOC | 126 | 140 (+62 theme-context) | 126 | 126 | 126 |
-| status | base | **rewritten** | ≡names | ≡names | ≡names |
+|        | wh   | fl                      | au     | li     | en     |
+| ------ | ---- | ----------------------- | ------ | ------ | ------ |
+| LOC    | 126  | 140 (+62 theme-context) | 126    | 126    | 126    |
+| status | base | **rewritten**           | ≡names | ≡names | ≡names |
 
 - **wh/au/li/en** export `ThemePref`, `ResolvedTheme`, `getThemePref`, `resolveTheme`, `setThemePref`, `subscribeThemePref(listener(pref))`, `subscribeSystemTheme`, `initTheme`, `detectHostTheme()` and `watchHostTheme`. Host detection looks for the `dark`/`light` class or `data-theme` on `<html>`, then `<body>`, then falls back to the OS setting.
 - **fl** (`xtandard-flags:src/ui/theme.ts`) is better in four ways:
@@ -44,6 +44,7 @@ Deps of this set: `@base-ui-components/react`, `lucide-react`, `clsx`, `tailwind
 ### A3. `api.ts`: the fetch client core
 
 What every copy shares is the same about 40 lines:
+
 - module-level `apiBase`, `apiCredentials` and `apiFetch`;
 - `FetchLike`, `ApiClientOptions`, `setApiBase(base, {credentials, fetch})`;
 - `req<T>()`: JSON headers, error body → `<P>ApiError`, empty body → `undefined`;
@@ -51,14 +52,14 @@ What every copy shares is the same about 40 lines:
 
 The rest of each file is product endpoints (wh 316, fl 340, au 221, li 293, en 265 LOC).
 
-| Feature | wh | fl | au | li | en |
-|---|---|---|---|---|---|
-| `setApiToken` (Bearer) | ✓ | ✗ (no portal) | ✓ | ✓ | ✓ |
-| `apiUrl()` + split `send()` (Response, for blobs/CSV/JWKS) / `req()` | ✗ | ✗ | ✓ | ✓ | ✗ |
-| `{...body, status}` forces the status into the error body | ✗ | ✗ | ✓ | ✓ | ✗ (body `{error}` only) |
-| `getApiToken()` | ✗ | ✗ | ✗ | ✗ | ✓ |
-| `setPreviewCustomer()` (adds `?customer=` to portal routes) | – | – | – | – | ✓ (product) |
-| `query()` skips `null` | ✗ | – | ✗ | (toQuery supports arrays/booleans) | ✓ |
+| Feature                                                              | wh  | fl            | au  | li                                 | en                      |
+| -------------------------------------------------------------------- | --- | ------------- | --- | ---------------------------------- | ----------------------- |
+| `setApiToken` (Bearer)                                               | ✓   | ✗ (no portal) | ✓   | ✓                                  | ✓                       |
+| `apiUrl()` + split `send()` (Response, for blobs/CSV/JWKS) / `req()` | ✗   | ✗             | ✓   | ✓                                  | ✗                       |
+| `{...body, status}` forces the status into the error body            | ✗   | ✗             | ✓   | ✓                                  | ✗ (body `{error}` only) |
+| `getApiToken()`                                                      | ✗   | ✗             | ✗   | ✗                                  | ✓                       |
+| `setPreviewCustomer()` (adds `?customer=` to portal routes)          | –   | –             | –   | –                                  | ✓ (product)             |
+| `query()` skips `null`                                               | ✗   | –             | ✗   | (toQuery supports arrays/booleans) | ✓                       |
 
 - **Best:** au/li's `send`/`req`/`apiUrl` split, en's `getApiToken`, and li's `toQuery` (array and boolean values).
 - **Kit:** `createApiClient({ ErrorClass })` returning `{setApiBase, setApiToken, getApiToken, apiUrl, send, req, query}`, plus a generic `ApiError` body type. The error class name (`WebhooksApiError`…) stays product-side, either as a subclass or as an injected constructor.
@@ -68,6 +69,7 @@ The rest of each file is product endpoints (wh 316, fl 340, au 221, li 293, en 2
 LOC: wh 48, fl 41, au 48, li 40, en 52. The shape is the same everywhere: `initTheme()` → read the token → `QueryClient{retry:1, refetchOnWindowFocus:false}` → `basePath` from `window.__<P>_CONFIG__` → `<ToastProvider><App locationHook={useBrowserLocation} base/>`.
 
 Where they differ:
+
 - **wh** alone passes `showBrandMark`. The others render the mark themselves.
 - **fl** has no token handling.
 - **li** declares the `window.__LINKS_CONFIG__` global type in `App.tsx`, so `main.tsx` needs no cast.
@@ -78,6 +80,7 @@ Where they differ:
 ### A5. `index.html`
 
 LOC: wh 17, fl 17, au 15, li 20, en 20. Title, description and favicon links are templated per product.
+
 - fl, li and en use `favicon.ico sizes="any"`; wh uses `sizes="32x32"`.
 - **au** links only `./brand/favicon.svg` (it has no `public/` dir: assets live in `src/ui/brand/`, imported as URLs). It has **no `.ico` and no apple-touch-icon**. That is drift.
 - **Kit:** generate the HTML from `{title, description}`.
@@ -85,6 +88,7 @@ LOC: wh 17, fl 17, au 15, li 20, en 20. Title, description and favicon links are
 ### A6. `styles.css`
 
 LOC: wh 188, fl 218, au 189, li 191, en 207. Every copy has the same skeleton:
+
 - `@import "tailwindcss"`;
 - `@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *))`;
 - the `@theme inline` mapping;
@@ -92,6 +96,7 @@ LOC: wh 188, fl 218, au 189, li 191, en 207. Every copy has the same skeleton:
 - the base layer.
 
 Differences:
+
 - **wh/fl/au**: blue accent `oklch(0.55 0.2 256)`. au only adds Menlo/Consolas to `--font-mono`.
 - **fl**: adds `--code-key/string/number/literal` tokens and `.tok-*` classes for CodeMirror's `classHighlighter`.
 - **li/en**: brand-lime accent, retuned success/warning/info/chart colours. en also has `--chart-track`, `--mark-*` brand-mark colours and hue 247 neutrals instead of 285.
@@ -101,6 +106,7 @@ Differences:
 ### A7. `App.tsx`: shell vs product
 
 LOC: wh 355, fl 590, au 370, li 339, en 247. The shell skeleton is the same in all five:
+
 - `App({locationHook, base, logoUrl, initial…, showThemeToggle})` → `<Router hook base><AppShell/>`;
 - `getBootstrap()` from `window.__<P>_CONFIG__`;
 - `configQuery(["config"], getConfig, staleTime 60s)`;
@@ -110,6 +116,7 @@ LOC: wh 355, fl 590, au 370, li 339, en 247. The shell skeleton is the same in a
 - a header with a tenant/app switcher, then `<Switch>` routes.
 
 Product-specific:
+
 - the scope switcher: app (wh), project+env (fl), tenant (au/li), none (en);
 - the tabs and the views;
 - the meaning of portal, viewer or forcePortal.
@@ -117,19 +124,20 @@ Product-specific:
 li has already pulled part of this into `xtandard-links:src/ui/lib/shell.tsx` (52 lines: `Shell`, `ShellContext`, `useShell`, `canPerform`).
 
 Brand mark:
+
 - **wh** inlines `<img src="symbol(-light).svg">`, served from `public/`, and only shows it when `showBrandMark`.
 - **au** imports the SVGs as URLs from `src/ui/brand/`.
 - **fl, li and en** have a `BrandMark` component: fl and li in `components/BrandMark.tsx`, en in `ent-bits.tsx`. It inlines the SVG as a data URL via `?raw`, so it works inside the embed with no asset to serve. fl chooses the variant with `useTheme()`; li and en render both variants with `dark:hidden`.
 
-**Portal race fix** (au 6761a34, *"portal SPA waits for /config before the default route"*):
+**Portal race fix** (au 6761a34, _"portal SPA waits for /config before the default route"_):
 
-| Repo | Fix | Where |
-|---|---|---|
-| au | has it | `xtandard-audit:src/ui/App.tsx:170,334,358` (queries `enabled: configQuery.isSuccess`, default route rendered only once config loaded) |
-| li | has it, ported without a fix commit | `xtandard-links:src/ui/App.tsx:135,220,265,291` |
-| en | has it, different approach | `xtandard-entitlements:src/ui/App.tsx:96,111`: `portal = forcePortal \|\| config.mode==="portal" \|\| getApiToken()!==null`, and it renders nothing while loading |
-| wh | **lacks it** | `xtandard-webhooks:src/ui/App.tsx:114-128`: `portal` comes from `configQuery.data ?? bootstrap`. The bootstrap can't know about a `?token=`, so before `/config` returns, `listApplications` fires (`enabled: !portal`) and `OverviewView` mounts. Both are admin requests that a portal token is denied. |
-| fl | n/a | no portal |
+| Repo | Fix                                 | Where                                                                                                                                                                                                                                                                                                     |
+| ---- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| au   | has it                              | `xtandard-audit:src/ui/App.tsx:170,334,358` (queries `enabled: configQuery.isSuccess`, default route rendered only once config loaded)                                                                                                                                                                    |
+| li   | has it, ported without a fix commit | `xtandard-links:src/ui/App.tsx:135,220,265,291`                                                                                                                                                                                                                                                           |
+| en   | has it, different approach          | `xtandard-entitlements:src/ui/App.tsx:96,111`: `portal = forcePortal \|\| config.mode==="portal" \|\| getApiToken()!==null`, and it renders nothing while loading                                                                                                                                         |
+| wh   | **lacks it**                        | `xtandard-webhooks:src/ui/App.tsx:114-128`: `portal` comes from `configQuery.data ?? bootstrap`. The bootstrap can't know about a `?token=`, so before `/config` returns, `listApplications` fires (`enabled: !portal`) and `OverviewView` mounts. Both are admin requests that a portal token is denied. |
+| fl   | n/a                                 | no portal                                                                                                                                                                                                                                                                                                 |
 
 **Kit:** a `<ShellFrame>` covering header, brand, badges, toggle, tabs and nav-guarded `go()`, plus a `useShellConfig()` hook. The hook should apply au's "wait for config" rule, with en's "a token means portal" shortcut. Products pass in the switcher slot, the tabs and the routes.
 
@@ -155,14 +163,14 @@ Brand mark:
   - `./react`: wh, fl, au and li point at `dist/react.js` with types in `dist/types-react/react.d.ts`, ESM only. In **en**, `./react` is a different package: customer-facing hooks/components (`src/entry-react.ts`, built by `vp pack`, ESM+CJS). The admin embed lives at **`./react/embed`** (`dist/react-embed.js`), with an extra **`./react/components.css`** (copied in `build:react`).
 - **Embed exports:**
 
-| | wh | fl | au | li | en (`/react/embed`) |
-|---|---|---|---|---|---|
-| Dashboard | `WebhooksDashboard` (default) | `FlagsDashboard` (default) | `AuditDashboard` (default) | `LinksDashboard` (default) | `EntitlementsDashboard` (default) |
-| Token component | `WebhooksPortal` | – | `AuditPortal` | `LinkAnalytics` (viewer token) | `CustomerPortal` |
-| Props type(s) | `…DashboardProps`, `…PortalProps` | `FlagsDashboardProps` | ✓ | `…Props`, `LinkAnalyticsProps` | ✓ |
-| Theme type | `EmbedTheme` | `ThemeMode` | `EmbedTheme` | `EmbedTheme` | `EmbedTheme` |
-| Re-exports | `setApiBase`, `setApiToken`, `FetchLike`, `setThemePref`, `getThemePref`, `detectHostTheme`, `ThemePref`, `ResolvedTheme` | `setApiBase`, `setThemePref`, `getThemePref`, `ThemePref`, `ResolvedTheme` | same as wh | same as wh | same as wh |
-| Initial scope prop | `initialApplicationKey` | `initialProjectKey`, `initialEnvironmentKey` | `initialTenant` | `initialTenant` | – |
+|                    | wh                                                                                                                        | fl                                                                         | au                         | li                             | en (`/react/embed`)               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | -------------------------- | ------------------------------ | --------------------------------- |
+| Dashboard          | `WebhooksDashboard` (default)                                                                                             | `FlagsDashboard` (default)                                                 | `AuditDashboard` (default) | `LinksDashboard` (default)     | `EntitlementsDashboard` (default) |
+| Token component    | `WebhooksPortal`                                                                                                          | –                                                                          | `AuditPortal`              | `LinkAnalytics` (viewer token) | `CustomerPortal`                  |
+| Props type(s)      | `…DashboardProps`, `…PortalProps`                                                                                         | `FlagsDashboardProps`                                                      | ✓                          | `…Props`, `LinkAnalyticsProps` | ✓                                 |
+| Theme type         | `EmbedTheme`                                                                                                              | `ThemeMode`                                                                | `EmbedTheme`               | `EmbedTheme`                   | `EmbedTheme`                      |
+| Re-exports         | `setApiBase`, `setApiToken`, `FetchLike`, `setThemePref`, `getThemePref`, `detectHostTheme`, `ThemePref`, `ResolvedTheme` | `setApiBase`, `setThemePref`, `getThemePref`, `ThemePref`, `ResolvedTheme` | same as wh                 | same as wh                     | same as wh                        |
+| Initial scope prop | `initialApplicationKey`                                                                                                   | `initialProjectKey`, `initialEnvironmentKey`                               | `initialTenant`            | `initialTenant`                | –                                 |
 
 - **Runtime contracts:**
   - the wrapper class `.xtandard-<p>`;
@@ -174,6 +182,7 @@ Brand mark:
 ### A10. `src/react.tsx` embeds
 
 LOC: wh 242, fl 169, au 245, li 256, en 220 (`react-embed.tsx`) + 27 (`entry-react-embed.ts`). Status:
+
 - **au** ≡ wh except docs and the `initialTenant` rename.
 - **en** ≡ wh's body refactored into an internal `Embed({portal})`. It has no initial-scope prop and passes `forcePortal`.
 - **li** ≡ wh plus two generic improvements nobody else has:
@@ -183,34 +192,36 @@ LOC: wh 242, fl 169, au 245, li 256, en 220 (`react-embed.tsx`) + 27 (`entry-rea
 - **fl** has no portal. It uses `ThemeProvider` instead of the local `useEmbedTheme`, and its re-exports are narrower.
 
 The shared embed logic (about 120 lines) is:
+
 - `setApiBase` with credentials and fetch, run synchronously;
 - the `useEmbedTheme` / ThemeProvider;
 - the fallback QueryClient singleton;
 - `setPortalContainerRef(wrapperRef)`;
 - the routing resolver (`hash`|`browser`|`memory`|hook);
-- the wrapper `<div data-theme className="xtandard-<p> …">` with `ToastProvider` *inside* it;
+- the wrapper `<div data-theme className="xtandard-<p> …">` with `ToastProvider` _inside_ it;
 - the token component (`setApiToken` synchronously plus an effect).
 
 **Kit:** `createEmbed({ App, scopeClass, appProps })` → `{Dashboard, TokenEmbed}`, using li's routing and invalidation and fl's theme store.
 
 **Fix matrix for the embed and its CSS:**
 
-| Fix | wh | fl | au | li | en |
-|---|---|---|---|---|---|
-| c1f27b3 / fl cc2141e: scope the embed CSS + portals (scope-embed-css.ts chained in `build:react`, portal-container, wrapper class) | has | has | has | has | has (`xtandard-entitlements:package.json` build:react) |
-| 986ad99 / fl de6600e: one theme per embed, `data-theme` on the wrapper, `:root[…]` and `body` moved onto the wrapper, Toasts inside the wrapper, `inherit`/`light`/`dark` modes | has | has (richer) | has | has | has (`xtandard-entitlements:src/react-embed.tsx:51-75,174-184`) |
-| ↳ unit test for the scoping transform (`test/embed-css.test.ts`) | has (84) | has (88) | has (84) | has (84) | **lacks**: no embed-css test; covered only by the e2e `embed.spec.ts` |
-| ↳ e2e theme spec | `e2e/embed.spec.ts` (7 tests) | `e2e/embed-theme.spec.ts` (5) | `embed.spec.ts` (8) | `embed.spec.ts` (8) | `embed.spec.ts` (6) + `portal.spec.ts` |
-| ↳ CodeMirror colours from theme tokens | has | has (classHighlighter) | has | n/a | n/a |
-| memory-router searchHook | lacks | lacks | lacks | **has** | lacks |
-| invalidate queries on token swap | lacks | n/a | lacks | **has** | lacks |
-| strip the token from the URL (`takeTokenFromUrl`) | lacks | n/a | lacks | lacks | **has** |
-| portal waits for /config | **lacks** | n/a | has | has | has (alt.) |
+| Fix                                                                                                                                                                             | wh                            | fl                            | au                  | li                  | en                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ----------------------------- | ------------------- | ------------------- | --------------------------------------------------------------------- |
+| c1f27b3 / fl cc2141e: scope the embed CSS + portals (scope-embed-css.ts chained in `build:react`, portal-container, wrapper class)                                              | has                           | has                           | has                 | has                 | has (`xtandard-entitlements:package.json` build:react)                |
+| 986ad99 / fl de6600e: one theme per embed, `data-theme` on the wrapper, `:root[…]` and `body` moved onto the wrapper, Toasts inside the wrapper, `inherit`/`light`/`dark` modes | has                           | has (richer)                  | has                 | has                 | has (`xtandard-entitlements:src/react-embed.tsx:51-75,174-184`)       |
+| ↳ unit test for the scoping transform (`test/embed-css.test.ts`)                                                                                                                | has (84)                      | has (88)                      | has (84)            | has (84)            | **lacks**: no embed-css test; covered only by the e2e `embed.spec.ts` |
+| ↳ e2e theme spec                                                                                                                                                                | `e2e/embed.spec.ts` (7 tests) | `e2e/embed-theme.spec.ts` (5) | `embed.spec.ts` (8) | `embed.spec.ts` (8) | `embed.spec.ts` (6) + `portal.spec.ts`                                |
+| ↳ CodeMirror colours from theme tokens                                                                                                                                          | has                           | has (classHighlighter)        | has                 | n/a                 | n/a                                                                   |
+| memory-router searchHook                                                                                                                                                        | lacks                         | lacks                         | lacks               | **has**             | lacks                                                                 |
+| invalidate queries on token swap                                                                                                                                                | lacks                         | n/a                           | lacks               | **has**             | lacks                                                                 |
+| strip the token from the URL (`takeTokenFromUrl`)                                                                                                                               | lacks                         | n/a                           | lacks               | lacks               | **has**                                                               |
+| portal waits for /config                                                                                                                                                        | **lacks**                     | n/a                           | has                 | has                 | has (alt.)                                                            |
 
 ### A11. `scripts/scope-embed-css.ts`
 
 LOC: wh 88, fl 89, au 88, li 88, en 88. au, li and en ≡ wh; fl differs.
-- **fl** re-homes *any* compound root selector, `/^(?::root|html)([[:.].*)$/`, so `:root.dark` and `:root:not(…)` are handled. wh only handles `[`-qualified ones. fl also folds `body` into the same regex as `:root|html|:host`.
+
+- **fl** re-homes _any_ compound root selector, `/^(?::root|html)([[:.].*)$/`, so `:root.dark` and `:root:not(…)` are handled. wh only handles `[`-qualified ones. fl also folds `body` into the same regex as `:root|html|:host`.
 - **Best:** fl's transform with wh's comments.
 - **Kit:** `scopeCss(css, scope)` and `findUnscopedLeaks(css, scope)`, parametrised by `SCOPE` (today a constant `.xtandard-<p>`) and `CSS_PATH`, plus a small CLI. It needs `postcss`, `postcss-prefix-selector` and the ambient types in `scripts/vendor.d.ts` (byte-identical, 19 LOC ×5).
 
@@ -224,17 +235,17 @@ LOC: wh 88, fl 89, au 88, li 88, en 88. au, li and en ≡ wh; fl differs.
 
 ### A13. UI tests
 
-| Test | wh | fl | au | li | en |
-|---|---|---|---|---|---|
-| `test/ui-lib.test.ts` (product `format.ts` helpers) | 169 | – | 446 | 544 | 488 (+ takeTokenFromUrl) |
-| `test/embed-css.test.ts` | 84 | 88 | 84 | 84 | **–** |
-| `test/react-embed.test.ts` (exports and props compile) | 61 | – | 61 | 57 | – (en has `react.test.tsx`, `react.test-d.ts`, `react-compute.test.ts` for the hooks package) |
-| `test/theme.test.ts` | – | 80 | – | – | – |
-| `test/ui-variants.test.ts`, `cors-embed.test.ts` | – | fl only | – | – | – |
-| `playwright.config.ts` | 31 | 31 | 32 | 32 | 32 |
-| `e2e/ui.spec.ts` | 187 | 294 | 260 | 273 | 183 |
-| `e2e/server.ts` | 155 | – (boots `apps/standalone`) | 241 | 21 (wraps `scripts/demo-app.ts`) | 155 |
-| `e2e/embed-host.tsx` | 28 | `embed-host/main.tsx` 26 (built to the gitignored `e2e/.embed-host/`) | 53 | 50 | 104 |
+| Test                                                   | wh  | fl                                                                    | au  | li                               | en                                                                                            |
+| ------------------------------------------------------ | --- | --------------------------------------------------------------------- | --- | -------------------------------- | --------------------------------------------------------------------------------------------- |
+| `test/ui-lib.test.ts` (product `format.ts` helpers)    | 169 | –                                                                     | 446 | 544                              | 488 (+ takeTokenFromUrl)                                                                      |
+| `test/embed-css.test.ts`                               | 84  | 88                                                                    | 84  | 84                               | **–**                                                                                         |
+| `test/react-embed.test.ts` (exports and props compile) | 61  | –                                                                     | 61  | 57                               | – (en has `react.test.tsx`, `react.test-d.ts`, `react-compute.test.ts` for the hooks package) |
+| `test/theme.test.ts`                                   | –   | 80                                                                    | –   | –                                | –                                                                                             |
+| `test/ui-variants.test.ts`, `cors-embed.test.ts`       | –   | fl only                                                               | –   | –                                | –                                                                                             |
+| `playwright.config.ts`                                 | 31  | 31                                                                    | 32  | 32                               | 32                                                                                            |
+| `e2e/ui.spec.ts`                                       | 187 | 294                                                                   | 260 | 273                              | 183                                                                                           |
+| `e2e/server.ts`                                        | 155 | – (boots `apps/standalone`)                                           | 241 | 21 (wraps `scripts/demo-app.ts`) | 155                                                                                           |
+| `e2e/embed-host.tsx`                                   | 28  | `embed-host/main.tsx` 26 (built to the gitignored `e2e/.embed-host/`) | 53  | 50                               | 104                                                                                           |
 
 - Playwright config drift: ports (wh, au, li 3311; fl 3310; en 3411), webServer timeout (wh, fl, li 120s; au, en 300s), en `workers:1`, and the webServer command (fl boots the standalone app with env vars; en runs the full `bun run build`).
 - **Kit:**
@@ -246,24 +257,25 @@ LOC: wh 88, fl 89, au 88, li 88, en 88. au, li and en ≡ wh; fl differs.
 
 ## B. Docs site (`site/**`)
 
-| File | wh | fl | au | li | en | Status |
-|---|---|---|---|---|---|---|
-| `site/scripts/typedoc-plugin.ts` | 87 | 87 | 87 | 87 | 87 | ≡names (au: header comment only). **Kit as is.** |
-| `site/scripts/api-overviews.ts` | 249 | 250 | 250 | 249 | 249 | au, li, en ≡ wh; fl diverged (below) |
-| `site/scripts/sync.ts` | 436 | 454 | 462 | 436 | 438 | li ≡ wh; fl, au, en extended (below) |
-| `site/manifest.ts` | 242 | 406 | 315 | 295 | 300 | generic head (repo/package/site origin, entries) plus a product sidebar |
-| `site/astro.config.ts` | 154 | 164 | 164 | 161 | 153 | template plus product strings (description, apiOwners, tagline) |
-| `site/package.json` | 28 ×5 | | | | | ≡ except the dev port (wh 4323, fl 4322, au 4326, li 4331, en 4324); same pinned deps (astro 7.4.13, starlight 0.43.1, starlight-typedoc 0.23.2, typedoc 0.28.20…) |
-| `site/typedoc.main.tsconfig.json` | 8 ×5 | | | | | byte-identical |
-| `site/typedoc.elysia2.tsconfig.json` | 12 ×5 | | | | | ≡names |
-| `site/typedoc.tsconfig.json` | 13 | 11 | 13 | 13 | 10 | **en references only `main`**, so there is no Elysia 2 program and `/api/elysia2/` is documented against Elysia 1 types |
-| `site/tsconfig.json` | 6 | 7 | 6 | 6 | 6 | fl adds `strict:true` (redundant) |
-| `site/src/content.config.ts` | 10 ×5 | | | | | byte-identical |
-| `site/.gitignore` | 6 | 8 | 8 | 6 | 6 | fl and au also ignore `/public/` (generated by sync) |
-| `site/src/styles/brand.css` | 63 | 55 | 70 | 70 | 55 | wh ≡ fl ≡ en palette (lime-400 on charcoal); fl and en lack the "screenshots" img rule; au and li have their own greys and limes |
-| `site/content/index.mdx` | 270 | 284 | 276 | 291 | 186 | product content |
+| File                                 | wh    | fl  | au  | li  | en  | Status                                                                                                                                                             |
+| ------------------------------------ | ----- | --- | --- | --- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `site/scripts/typedoc-plugin.ts`     | 87    | 87  | 87  | 87  | 87  | ≡names (au: header comment only). **Kit as is.**                                                                                                                   |
+| `site/scripts/api-overviews.ts`      | 249   | 250 | 250 | 249 | 249 | au, li, en ≡ wh; fl diverged (below)                                                                                                                               |
+| `site/scripts/sync.ts`               | 436   | 454 | 462 | 436 | 438 | li ≡ wh; fl, au, en extended (below)                                                                                                                               |
+| `site/manifest.ts`                   | 242   | 406 | 315 | 295 | 300 | generic head (repo/package/site origin, entries) plus a product sidebar                                                                                            |
+| `site/astro.config.ts`               | 154   | 164 | 164 | 161 | 153 | template plus product strings (description, apiOwners, tagline)                                                                                                    |
+| `site/package.json`                  | 28 ×5 |     |     |     |     | ≡ except the dev port (wh 4323, fl 4322, au 4326, li 4331, en 4324); same pinned deps (astro 7.4.13, starlight 0.43.1, starlight-typedoc 0.23.2, typedoc 0.28.20…) |
+| `site/typedoc.main.tsconfig.json`    | 8 ×5  |     |     |     |     | byte-identical                                                                                                                                                     |
+| `site/typedoc.elysia2.tsconfig.json` | 12 ×5 |     |     |     |     | ≡names                                                                                                                                                             |
+| `site/typedoc.tsconfig.json`         | 13    | 11  | 13  | 13  | 10  | **en references only `main`**, so there is no Elysia 2 program and `/api/elysia2/` is documented against Elysia 1 types                                            |
+| `site/tsconfig.json`                 | 6     | 7   | 6   | 6   | 6   | fl adds `strict:true` (redundant)                                                                                                                                  |
+| `site/src/content.config.ts`         | 10 ×5 |     |     |     |     | byte-identical                                                                                                                                                     |
+| `site/.gitignore`                    | 6     | 8   | 8   | 6   | 6   | fl and au also ignore `/public/` (generated by sync)                                                                                                               |
+| `site/src/styles/brand.css`          | 63    | 55  | 70  | 70  | 55  | wh ≡ fl ≡ en palette (lime-400 on charcoal); fl and en lack the "screenshots" img rule; au and li have their own greys and limes                                   |
+| `site/content/index.mdx`             | 270   | 284 | 276 | 291 | 186 | product content                                                                                                                                                    |
 
 **Divergences that matter:**
+
 - **`api-overviews.ts` (fl):**
   - uses `apiEntries()`/`name` instead of `entries()`/`module`;
   - sorts modules in **package.json `exports` order** rather than root-first then alphabetical;
@@ -286,12 +298,13 @@ LOC: wh 88, fl 89, au 88, li 88, en 88. au, li and en ≡ wh; fl differs.
 
 **Site fix matrix:**
 
-| Fix | wh | fl | au | li | en |
-|---|---|---|---|---|---|
-| bc53bad / fl 2ada92e / au c8a72c7 / en ed237f2: https og:url, og:image, sitemap (`siteOrigin` http→https) | has `manifest.ts:30` | has `:30` | has `:34` | has (ported without a fix commit) `:31` | has `:30` |
-| fl e98d7db: re-export detection only counts `export … from` | has (different regex) | has | has | has | has |
+| Fix                                                                                                       | wh                    | fl        | au        | li                                      | en        |
+| --------------------------------------------------------------------------------------------------------- | --------------------- | --------- | --------- | --------------------------------------- | --------- |
+| bc53bad / fl 2ada92e / au c8a72c7 / en ed237f2: https og:url, og:image, sitemap (`siteOrigin` http→https) | has `manifest.ts:30`  | has `:30` | has `:34` | has (ported without a fix commit) `:31` | has `:30` |
+| fl e98d7db: re-export detection only counts `export … from`                                               | has (different regex) | has       | has       | has                                     | has       |
 
 **Kit:** a `@xtandard/kit/site` (or a `create-xtandard-site` preset) containing:
+
 - `typedoc-plugin.ts` and `api-overviews.ts` (fl's version);
 - `sync.ts` (union of fl and au, with one "pending" design);
 - `entries()`/`apiEntries()` (one order);
@@ -343,6 +356,7 @@ Product-specific: the sidebar/IA, `apiOwners`, the description and tagline, `ind
 ### C2. `vite.config.ts` (vite-plus: test, lint, fmt, staged, pack)
 
 LOC: wh 108, fl 117, au 115, li 114, en 126. The shared skeleton:
+
 - the test projects `core` (`test/**/*.test.ts(x)`, excluding `*.bun.test.ts`, `elysia2.test.ts`, e2e and dist) and `elysia2` (alias `elysia → elysia-v2`), `retry: 2`;
 - v8 coverage over `src/**/*.ts`, excluding `src/ui/**`, `src/entry-*.ts` and `src/cli.ts`;
 - `lint.ignorePatterns [dist, src/ui, apps, examples]`;
@@ -351,6 +365,7 @@ LOC: wh 108, fl 117, au 115, li 114, en 126. The shared skeleton:
 - `pack {entry[], dts, format [esm,cjs], sourcemap, deps.neverBundle [/^bun:/]}`.
 
 Drift:
+
 - Coverage thresholds: wh, fl and au use 92/85/90/92; li 90/80/88/90; en 90/82/90/90. Extra coverage excludes are product-specific.
 - li and en lint-ignore `site/**`.
 - Extra fmt ignores: au `NOTES-*.md`; en `MISSION.md`.
@@ -362,21 +377,21 @@ Drift:
 
 **Tooling fix matrix:**
 
-| Fix | wh | fl | au | li | en |
-|---|---|---|---|---|---|
-| fl 8810808: CHANGELOG.md excluded from fmt | has | has | has | has | has |
-| fl 8bdb873: `src/cli.ts` excluded from coverage, plus pre-commit/pre-push hooks | has | has | has | has | has |
+| Fix                                                                                                                                                   | wh  | fl  | au  | li  | en  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- | --- | --- | --- | --- | --- |
+| fl 8810808: CHANGELOG.md excluded from fmt                                                                                                            | has | has | has | has | has |
+| fl 8bdb873: `src/cli.ts` excluded from coverage, plus pre-commit/pre-push hooks                                                                       | has | has | has | has | has |
 | au f8b0c4a / li 50445c0: staged fmt doesn't fail on commits touching only mdx or CHANGELOG (`--no-error-on-unmatched-pattern`, no `.mdx` in the glob) | has | has | has | has | has |
-| .mdx excluded from fmt (oxfmt mangles `{/* */}`) | has | has | has | has | has |
+| .mdx excluded from fmt (oxfmt mangles `{/* */}`)                                                                                                      | has | has | has | has | has |
 
 ### C3. TS configs
 
-| File | Status |
-|---|---|
-| `tsconfig.json` (36 ×5) | byte-identical. ESNext, `module Preserve`, bundler resolution, `allowImportingTsExtensions`, `verbatimModuleSyntax`, strict, `noUncheckedIndexedAccess`, `types:[bun]`; includes src/test/`scripts/vendor.d.ts`; excludes elysia2 files and `*.bun.test.ts`. Kit: `@xtandard/kit/tsconfig.base.json`. |
-| `tsconfig.elysia2.json` (14 ×5) | byte-identical |
-| `tsconfig.elysia2.build.json` (14 ×5) | ≡names |
-| `tsconfig.react.json` (13 ×5) | see A12 |
+| File                                  | Status                                                                                                                                                                                                                                                                                                |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tsconfig.json` (36 ×5)               | byte-identical. ESNext, `module Preserve`, bundler resolution, `allowImportingTsExtensions`, `verbatimModuleSyntax`, strict, `noUncheckedIndexedAccess`, `types:[bun]`; includes src/test/`scripts/vendor.d.ts`; excludes elysia2 files and `*.bun.test.ts`. Kit: `@xtandard/kit/tsconfig.base.json`. |
+| `tsconfig.elysia2.json` (14 ×5)       | byte-identical                                                                                                                                                                                                                                                                                        |
+| `tsconfig.elysia2.build.json` (14 ×5) | ≡names                                                                                                                                                                                                                                                                                                |
+| `tsconfig.react.json` (13 ×5)         | see A12                                                                                                                                                                                                                                                                                               |
 
 ### C4. Lint, format and hooks
 
@@ -386,18 +401,18 @@ Drift:
 
 ### C5. `scripts/*`
 
-| Script | wh | fl | au | li | en | Status → kit? |
-|---|---|---|---|---|---|---|
-| `fix-elysia2-types.ts` | 30 | 30 | 30 | 30 | 30 | ≡names (only the doc comment names the product) → **kit CLI as is** |
-| `vendor.d.ts` | 19 | 19 | 19 | 19 | 19 | byte-identical → kit |
-| `scope-embed-css.ts` | 88 | 89 | 88 | 88 | 88 | see A11 → kit |
-| `example.ts` (example runner) | 139 | 159 | 155 | 142 | 213 | Runner body ≡ in wh, fl, au and li apart from cosmetic changes: fl uses ℹ︎/▶ glyphs, au drops `panelPath`, li renames `panelPath`→`path` and drops `seed`. **en refactored it**: exported `ExampleConfig` and `EXAMPLES`, `runExample()`, `all --demo`, an `ELYSIA2` tsconfig override. → kit runner = en's shape, with the `EXAMPLES` table supplied by the product. |
-| `demo.ts` | 76 | 64 | 189 | 43 | 30 | product (boots its standalone server + seed) |
-| `seed-demo.ts` | 242 | 572 | 1127 | 1104 | 824 | product data |
-| `screenshots.ts` | – | – | – | 178 | 104 | Playwright screenshot helper (2× → downscale, oxipng). Kit candidate as a helper; the shot list stays per product. |
-| `brand-assets.sh` | 43 | 35 | 88 | 90 | 22 | diverged. Every copy needs rsvg-convert, magick and oxipng. Masters come from `brand-svg.ts` (wh, fl, en) or from `scripts/brand/*.py` via uv (au, li). |
-| `brand-svg.ts` | 289 | 270 | – | – | 283 | TS lockup generator |
-| `scripts/brand/{build,mark,text}.py` | – | – | 311/91/60 | 131/96/73 | – | Python lockup generator |
+| Script                               | wh  | fl  | au        | li        | en  | Status → kit?                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------ | --- | --- | --------- | --------- | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fix-elysia2-types.ts`               | 30  | 30  | 30        | 30        | 30  | ≡names (only the doc comment names the product) → **kit CLI as is**                                                                                                                                                                                                                                                                                                  |
+| `vendor.d.ts`                        | 19  | 19  | 19        | 19        | 19  | byte-identical → kit                                                                                                                                                                                                                                                                                                                                                 |
+| `scope-embed-css.ts`                 | 88  | 89  | 88        | 88        | 88  | see A11 → kit                                                                                                                                                                                                                                                                                                                                                        |
+| `example.ts` (example runner)        | 139 | 159 | 155       | 142       | 213 | Runner body ≡ in wh, fl, au and li apart from cosmetic changes: fl uses ℹ︎/▶ glyphs, au drops `panelPath`, li renames `panelPath`→`path` and drops `seed`. **en refactored it**: exported `ExampleConfig` and `EXAMPLES`, `runExample()`, `all --demo`, an `ELYSIA2` tsconfig override. → kit runner = en's shape, with the `EXAMPLES` table supplied by the product. |
+| `demo.ts`                            | 76  | 64  | 189       | 43        | 30  | product (boots its standalone server + seed)                                                                                                                                                                                                                                                                                                                         |
+| `seed-demo.ts`                       | 242 | 572 | 1127      | 1104      | 824 | product data                                                                                                                                                                                                                                                                                                                                                         |
+| `screenshots.ts`                     | –   | –   | –         | 178       | 104 | Playwright screenshot helper (2× → downscale, oxipng). Kit candidate as a helper; the shot list stays per product.                                                                                                                                                                                                                                                   |
+| `brand-assets.sh`                    | 43  | 35  | 88        | 90        | 22  | diverged. Every copy needs rsvg-convert, magick and oxipng. Masters come from `brand-svg.ts` (wh, fl, en) or from `scripts/brand/*.py` via uv (au, li).                                                                                                                                                                                                              |
+| `brand-svg.ts`                       | 289 | 270 | –         | –         | 283 | TS lockup generator                                                                                                                                                                                                                                                                                                                                                  |
+| `scripts/brand/{build,mark,text}.py` | –   | –   | 311/91/60 | 131/96/73 | –   | Python lockup generator                                                                                                                                                                                                                                                                                                                                              |
 
 Brand centring fix (fl f1b90e7 "centre the symbol on the wordmark"; au 058b787; li 50f4039; wh 95399eb/6b1be56 as `docs(brand)`; en d1a43f0/f5eb71b as `brand:`): **all 5 have it**. The rule is baseline − capHeight/2 with Urbanist sCapHeight 0.7. For example `xtandard-webhooks:scripts/brand-svg.ts:211`, `xtandard-entitlements:scripts/brand-svg.ts:217`. Note the wh and en fixes are not `fix` commits.
 
@@ -405,14 +420,15 @@ Brand centring fix (fl f1b90e7 "centre the symbol on the wordmark"; au 058b787; 
 
 ### C6. GitHub workflows (what a reusable `workflow_call` would take as inputs)
 
-| Workflow | wh | fl | au | li | en | Status |
-|---|---|---|---|---|---|---|
-| `ci.yml` | 114 | 114 | 114 | 128 | 112 | same two jobs: `build` (services redis, mongo, postgres, mysql → typecheck, typecheck:examples, lint, format:check, test:coverage, test:bun, build, publint, `bun pm pack --dry-run`) and `browser-e2e` (install chromium → `test:e2e`) |
-| `docker.yml` | 68 | 68 | 68 | 69 | **–** | build+push to GHCR from `apps/standalone/Dockerfile`, then a smoke test of `/healthcheck` and `/` |
-| `pages.yml` | 79 | 80 | 79 | 79 | 79 | ≡ (fl: comments; li: bun version) |
-| `release.yml` | 85 | 80 | 85 | 85 | 85 | tag → bun build → publint → `npm publish --provenance` (OIDC trusted publishing) → GitHub release. wh, au, li and en take the notes from the CHANGELOG section plus a compare link; **fl** uses `--generate-notes` and edits a changelogen draft. |
+| Workflow      | wh  | fl  | au  | li  | en    | Status                                                                                                                                                                                                                                            |
+| ------------- | --- | --- | --- | --- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci.yml`      | 114 | 114 | 114 | 128 | 112   | same two jobs: `build` (services redis, mongo, postgres, mysql → typecheck, typecheck:examples, lint, format:check, test:coverage, test:bun, build, publint, `bun pm pack --dry-run`) and `browser-e2e` (install chromium → `test:e2e`)           |
+| `docker.yml`  | 68  | 68  | 68  | 69  | **–** | build+push to GHCR from `apps/standalone/Dockerfile`, then a smoke test of `/healthcheck` and `/`                                                                                                                                                 |
+| `pages.yml`   | 79  | 80  | 79  | 79  | 79    | ≡ (fl: comments; li: bun version)                                                                                                                                                                                                                 |
+| `release.yml` | 85  | 80  | 85  | 85  | 85    | tag → bun build → publint → `npm publish --provenance` (OIDC trusted publishing) → GitHub release. wh, au, li and en take the notes from the CHANGELOG section plus a compare link; **fl** uses `--generate-notes` and edits a changelogen draft. |
 
 Drift and gaps:
+
 - **en has no `docker.yml`**, although `apps/standalone/Dockerfile` exists.
 - **en's CI skips `typecheck:examples`**, although the script exists.
 - The mysql health-cmd differs in fl, li and en.
@@ -421,6 +437,7 @@ Drift and gaps:
 - docker smoke: li probes `/<p>/` and `/<p>/api/openapi.json` instead of `/`.
 
 **Reusable workflow inputs:**
+
 - `ci.yml`:
   - `bun-version`;
   - `services` (bool flags: redis + image tag, mongo, postgres, mysql, clickhouse) with matching env URLs;

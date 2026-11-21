@@ -10,6 +10,7 @@ one place and reaches all five products.
 ## 1. Goals and non-goals
 
 **Goals**
+
 1. One implementation of each shared piece, assembled from the best copy and carrying every bug fix
    from every copy (inventory §3).
 2. Each product stays installable on its own. The kit is a regular `dependency` of each product, and
@@ -21,6 +22,7 @@ one place and reaches all five products.
    (ADR 0007).
 
 **Non-goals**
+
 - Product logic stays in the products:
   - webhooks' delivery queue;
   - audit's event log;
@@ -37,28 +39,28 @@ Rule (ADR 0002): the kit gets **mechanism**; the product keeps **policy and data
 differs between products by name, enum lists or defaults, it goes to the kit with those as parameters.
 If it encodes a product's domain, it stays.
 
-| Kit module | Built from (inventory) | Product supplies |
-|---|---|---|
-| storage contract `KvStorage` + capabilities (`watch`, `compareAndSwap`), guards, `withWatch`, `pgListenNotify`, `requirePeer` | any (≡) | type aliases (`WebhooksStorage = KvStorage`…), channel name |
-| storage util: `escapeLike/Glob/RedisGlob/Regex`, `canonical`, `canonicalJson`, `deepEqual` (own-props), `assertIdentifier`, key-segment helpers (`encodeSegment`, `lastSegment`, `sortableLeaf`) | en `util.ts`, au keys, wh `dueKey` | key layouts (`keys.ts`) |
-| drivers: memory, file, sqlite, libsql (shared `sqlite-kv`), postgres, mongodb, redis + RedisJSON, cloudflare-kv, unstorage, drizzle | en + li SCAN de-dup + escaped PSUBSCRIBE + wh `migrateFileStorage` + fl legacy read-through | default table/db/collection names, product capability layers |
-| drizzle KV table factories + column helpers (`textC`, `binVarchar`) | en | default table name, product tables |
-| conformance suite `@xtandard/kit/storage/testing` | union of li + en + wh sortable case + new cases (SCAN dupes, PSUBSCRIBE globs, empty segments, legacy-value CAS) | extra product suites |
-| auth `contract/none/basic/delegated` | any (≡) | default realm |
-| authorization `contract` (`defineActions`), `none`, `delegated`, `roles` | en layout | action/resource unions, `DEFAULT_ROLE_POLICY` |
-| hooks runner (`HookDeniedError`, `runBefore/After`, `normalizeHooks`, reporter) + `hooks/log` | any + en `json` | event unions, log `source`/`describe` |
-| HTTP plumbing: `base-path`, `cors`, `static-assets`, `renderIndexHtml`, `json/error/match/isNamed/mapError`, auth + scoped-token short-circuit, `authorize`, panel `createPanelHandler` (healthcheck, no-cache SPA, `close()`, background tasks) | li render + en skeleton + au/li/en `match` | `globalName`, bootstrap, API handler, error map, readonly status |
-| declarative router + OpenAPI generator (optional) | en | route table, schemas |
-| scoped tokens `createScopedTokens` | en (empty-secret check, `now`) | prefix, claims validator, TTL |
-| adapters: bun, hono (`waitUntilOf`), express + Node bridge (shared with the CLI), elysia/elysia2 `createPass`, next `toNextHandler` | li + au + en merge | panel factory names, typed Elysia chain |
-| CLI plumbing `createCli`: `env`, `parseArgs`, storage-from-env, `buildAuthFromEnv` (rejects unknown `AUTH_MODE`), `startServer`, `serve`, self-run guard | au/en loader, li+en parser, en auth, au guard | env prefix/roles, commands |
-| utils: `duration` (+`w`, `parseDurationList`), `canonicalStringify`, `createIdGenerator` (ULID + legacy formats), validation core, `JsonValue`/`Duration`/`Actor` | en/au/li | id format, prefixes |
-| testing helpers: `createTestClock`, `collectingSink` | en, au/li | — |
-| UI kit `@xtandard/kit/ui`: primitives, Toast, ThemeToggle, theme (fl API + wh guard), `createApiClient`, `takeTokenFromUrl`, `bootSpa`, `ShellFrame` + `useShellConfig`, bits, format, BrandMark, base `styles.css` | see inventory §2.3 | views, tabs, scope switcher, brand tokens, scope class, config global |
-| embed `@xtandard/kit/ui/embed`: `createEmbed` | li routing + invalidation, fl theme, en portal flag | component names, initial-scope props |
-| build tools `@xtandard/kit/build` + `xtandard-kit` bin: `scope-embed-css` (fl), `fix-elysia2-types`, vite/vite-plus/playwright config factories, tsconfig bases, example runner (en shape), API-surface snapshot | inventory §2.4 | entries, thresholds, ports |
-| docs site `@xtandard/kit/site`: `typedoc-plugin`, `api-overviews` (fl), `sync` (fl+au, one pending design), `defineXtandardSite` | inventory §2.4 | sidebar, `apiOwners`, copy, palette |
-| reusable workflows `.github/workflows/{ci,pages,docker,release-prepare}.yml` (`workflow_call`) | ≡ + drift fixed | inputs (services, bun version, smoke paths) |
+| Kit module                                                                                                                                                                                                                                       | Built from (inventory)                                                                                           | Product supplies                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| storage contract `KvStorage` + capabilities (`watch`, `compareAndSwap`), guards, `withWatch`, `pgListenNotify`, `requirePeer`                                                                                                                    | any (≡)                                                                                                          | type aliases (`WebhooksStorage = KvStorage`…), channel name           |
+| storage util: `escapeLike/Glob/RedisGlob/Regex`, `canonical`, `canonicalJson`, `deepEqual` (own-props), `assertIdentifier`, key-segment helpers (`encodeSegment`, `lastSegment`, `sortableLeaf`)                                                 | en `util.ts`, au keys, wh `dueKey`                                                                               | key layouts (`keys.ts`)                                               |
+| drivers: memory, file, sqlite, libsql (shared `sqlite-kv`), postgres, mongodb, redis + RedisJSON, cloudflare-kv, unstorage, drizzle                                                                                                              | en + li SCAN de-dup + escaped PSUBSCRIBE + wh `migrateFileStorage` + fl legacy read-through                      | default table/db/collection names, product capability layers          |
+| drizzle KV table factories + column helpers (`textC`, `binVarchar`)                                                                                                                                                                              | en                                                                                                               | default table name, product tables                                    |
+| conformance suite `@xtandard/kit/storage/testing`                                                                                                                                                                                                | union of li + en + wh sortable case + new cases (SCAN dupes, PSUBSCRIBE globs, empty segments, legacy-value CAS) | extra product suites                                                  |
+| auth `contract/none/basic/delegated`                                                                                                                                                                                                             | any (≡)                                                                                                          | default realm                                                         |
+| authorization `contract` (`defineActions`), `none`, `delegated`, `roles`                                                                                                                                                                         | en layout                                                                                                        | action/resource unions, `DEFAULT_ROLE_POLICY`                         |
+| hooks runner (`HookDeniedError`, `runBefore/After`, `normalizeHooks`, reporter) + `hooks/log`                                                                                                                                                    | any + en `json`                                                                                                  | event unions, log `source`/`describe`                                 |
+| HTTP plumbing: `base-path`, `cors`, `static-assets`, `renderIndexHtml`, `json/error/match/isNamed/mapError`, auth + scoped-token short-circuit, `authorize`, panel `createPanelHandler` (healthcheck, no-cache SPA, `close()`, background tasks) | li render + en skeleton + au/li/en `match`                                                                       | `globalName`, bootstrap, API handler, error map, readonly status      |
+| declarative router + OpenAPI generator (optional)                                                                                                                                                                                                | en                                                                                                               | route table, schemas                                                  |
+| scoped tokens `createScopedTokens`                                                                                                                                                                                                               | en (empty-secret check, `now`)                                                                                   | prefix, claims validator, TTL                                         |
+| adapters: bun, hono (`waitUntilOf`), express + Node bridge (shared with the CLI), elysia/elysia2 `createPass`, next `toNextHandler`                                                                                                              | li + au + en merge                                                                                               | panel factory names, typed Elysia chain                               |
+| CLI plumbing `createCli`: `env`, `parseArgs`, storage-from-env, `buildAuthFromEnv` (rejects unknown `AUTH_MODE`), `startServer`, `serve`, self-run guard                                                                                         | au/en loader, li+en parser, en auth, au guard                                                                    | env prefix/roles, commands                                            |
+| utils: `duration` (+`w`, `parseDurationList`), `canonicalStringify`, `createIdGenerator` (ULID + legacy formats), validation core, `JsonValue`/`Duration`/`Actor`                                                                                | en/au/li                                                                                                         | id format, prefixes                                                   |
+| testing helpers: `createTestClock`, `collectingSink`                                                                                                                                                                                             | en, au/li                                                                                                        | —                                                                     |
+| UI kit `@xtandard/kit/ui`: primitives, Toast, ThemeToggle, theme (fl API + wh guard), `createApiClient`, `takeTokenFromUrl`, `bootSpa`, `ShellFrame` + `useShellConfig`, bits, format, BrandMark, base `styles.css`                              | see inventory §2.3                                                                                               | views, tabs, scope switcher, brand tokens, scope class, config global |
+| embed `@xtandard/kit/ui/embed`: `createEmbed`                                                                                                                                                                                                    | li routing + invalidation, fl theme, en portal flag                                                              | component names, initial-scope props                                  |
+| build tools `@xtandard/kit/build` + `xtandard-kit` bin: `scope-embed-css` (fl), `fix-elysia2-types`, vite/vite-plus/playwright config factories, tsconfig bases, example runner (en shape), API-surface snapshot                                 | inventory §2.4                                                                                                   | entries, thresholds, ports                                            |
+| docs site `@xtandard/kit/site`: `typedoc-plugin`, `api-overviews` (fl), `sync` (fl+au, one pending design), `defineXtandardSite`                                                                                                                 | inventory §2.4                                                                                                   | sidebar, `apiOwners`, copy, palette                                   |
+| reusable workflows `.github/workflows/{ci,pages,docker,release-prepare}.yml` (`workflow_call`)                                                                                                                                                   | ≡ + drift fixed                                                                                                  | inputs (services, bun version, smoke paths)                           |
 
 ## 3. Subpath layout (ADR 0001)
 
@@ -113,6 +115,7 @@ export const createPostgresStorage = (o: kit.PostgresStorageOptions = {}) =>
 ```
 
 **Rules for product wrappers:**
+
 - Product-prefixed names stay (`webhooksPanel`, `WebhooksStorage`, `ElysiaWebhooksHandler`…), as
   aliases or thin wrappers.
 - Product defaults stay. Every default that affects stored data or the HTTP API is passed explicitly
@@ -155,22 +158,26 @@ runStorageConformance("postgres", () => createPostgresStorage(...), {
 ## 6. Versioning policy (ADR 0007)
 
 **Kit releases (ZeroVer):**
+
 - `0.MINOR.PATCH`. A breaking change bumps MINOR; fixes and additions bump PATCH.
 - The reusable workflows follow the same tags. Products reference `@v0.MINOR` (a moving tag per minor),
   so workflow fixes reach them as well.
 
 **Products:**
+
 - A product moves to a new kit MINOR in its own release. The kit's types appear in the product's
   `.d.mts`, so the product bumps too (a MINOR in ZeroVer if its own surface changes, a patch
   otherwise).
 
 **"Fix once" flow:**
+
 1. Fix the bug in the kit and add a conformance or unit case.
 2. Release a kit patch.
 3. Products' users pick it up on install. Products only refresh their lockfile and CI.
 
 **Docker images are the exception.** GHCR images bundle dependencies at build time, and the lockfile
 pins the kit. For a security fix:
+
 - re-run each product's `docker.yml` with `refresh-kit: true` (`workflow_dispatch`);
 - or merge a lockfile bump first.
 
@@ -179,6 +186,7 @@ pins the kit. For a security fix:
 ## 7. Migration order and per-product checklist (phase 4)
 
 Order: **webhooks → flags → audit → links → entitlements.**
+
 - webhooks first: it is the origin, it has the fewest extensions, and it carries stranded fixes.
 - flags next: the closest copy, and it has the most gaps (no CAS, auth-throw, guard).
 - audit next: its event-log layer exercises the extension points.
@@ -187,6 +195,7 @@ Order: **webhooks → flags → audit → links → entitlements.**
 
 One PR per repo, developed against `file:../xtandard-kit`. It merges only after the kit is on npm.
 Each PR:
+
 1. Takes an API-surface snapshot (before).
 2. Replaces the copied modules with kit imports and product wrappers. Product capability layers move
    onto the extension points.
@@ -205,6 +214,7 @@ Each PR:
 
 **Behaviour changes inherited from the kit** are deliberate bug fixes, and each is listed in the
 product CHANGELOG. Examples:
+
 - unknown `STORAGE_DRIVER` fails;
 - multiple `Set-Cookie` headers are kept;
 - index.html escapes the title;
@@ -212,13 +222,13 @@ product CHANGELOG. Examples:
 
 ## 8. Phase 3 build plan (kit repo)
 
-| Step | Scope | Worker |
-|---|---|---|
-| 0 | Repo skeleton, mirroring flags: package.json, vite-plus config, tsconfigs, husky, CI, README with the ecosystem section, CLAUDE.md, CHANGELOG, `docs/`, `site/` stub. Create the GitHub repo. | lead |
-| 1 | storage contract + util + all drivers + drizzle tables + conformance suite + driver tests | worker A (largest) |
-| 2 | auth, authorization, hooks, util, tokens, server plumbing + router/OpenAPI, adapters, CLI + tests | worker B |
-| 3 | UI kit + embed + build tools (scope-embed-css, config factories, api-surface) + site tooling + reusable workflows | worker C |
-| 4 | Docs site live, `npm pack --dry-run` + publint clean, release workflow → **READY TO PUBLISH** | lead |
+| Step | Scope                                                                                                                                                                                         | Worker             |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| 0    | Repo skeleton, mirroring flags: package.json, vite-plus config, tsconfigs, husky, CI, README with the ecosystem section, CLAUDE.md, CHANGELOG, `docs/`, `site/` stub. Create the GitHub repo. | lead               |
+| 1    | storage contract + util + all drivers + drizzle tables + conformance suite + driver tests                                                                                                     | worker A (largest) |
+| 2    | auth, authorization, hooks, util, tokens, server plumbing + router/OpenAPI, adapters, CLI + tests                                                                                             | worker B           |
+| 3    | UI kit + embed + build tools (scope-embed-css, config factories, api-surface) + site tooling + reusable workflows                                                                             | worker C           |
+| 4    | Docs site live, `npm pack --dry-run` + publint clean, release workflow → **READY TO PUBLISH**                                                                                                 | lead               |
 
 - At most 3 workers at once, each in its own worktree with disjoint directories.
 - Heavy jobs (full suites, builds, Docker) go through `heavy.sh`.

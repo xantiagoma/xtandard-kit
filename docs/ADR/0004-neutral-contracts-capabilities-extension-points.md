@@ -8,9 +8,11 @@
 
 All five products use the same four-method KV contract, with optional `watch` and `compareAndSwap`
 capabilities:
+
 - `getItem`, `setItem`, `removeItem`, `getKeys`.
 
 There are two product-specific layers on top:
+
 - webhooks: `claimDue`, which mirrors due keys into a Redis zset on every write;
 - audit: a native event log, which reuses each driver's SQL executor and readiness.
 
