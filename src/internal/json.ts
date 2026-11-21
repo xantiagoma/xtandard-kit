@@ -15,6 +15,20 @@ export type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
+/**
+ * What {@link canonicalStringify} accepts: a {@link JsonValue} whose object members (and array
+ * items) may also be `undefined`. Undefined members are dropped and undefined items become `null`,
+ * exactly as `JSON.stringify` does.
+ */
+export type CanonicalInput =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | CanonicalInput[]
+  | { [key: string]: CanonicalInput };
+
 /** A JSON object. */
 export type JsonObject = { [key: string]: JsonValue };
 
@@ -46,7 +60,7 @@ export const canonicalJson = (value: unknown): string => JSON.stringify(canonica
  * {@link canonicalJson} it **throws** on non-finite numbers instead of writing `null`. Matches RFC 8785
  * (JCS) for strings and integers. A top-level `undefined` serialises as `null`.
  */
-export function canonicalStringify(value: JsonValue | undefined): string {
+export function canonicalStringify(value: CanonicalInput): string {
   if (value === undefined) return "null";
   if (value === null || typeof value !== "object") {
     if (typeof value === "number" && !Number.isFinite(value)) {
@@ -58,7 +72,7 @@ export function canonicalStringify(value: JsonValue | undefined): string {
   const entries = Object.keys(value)
     .sort()
     .filter((k) => value[k] !== undefined)
-    .map((k) => `${JSON.stringify(k)}:${canonicalStringify(value[k] as JsonValue)}`);
+    .map((k) => `${JSON.stringify(k)}:${canonicalStringify(value[k])}`);
   return `{${entries.join(",")}}`;
 }
 

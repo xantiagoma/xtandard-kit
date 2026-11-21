@@ -57,3 +57,10 @@ describe("peers", () => {
     await expect(importPeer("x", "s", async () => 42)).resolves.toBe(42);
   });
 });
+
+test("canonicalStringify accepts undefined members and items (dropped / null, like JSON.stringify)", () => {
+  expect(canonicalStringify({ b: undefined, a: [1, undefined] })).toBe('{"a":[1,null]}');
+  expect(canonicalStringify({ b: undefined, a: [1, undefined] })).toBe(
+    JSON.stringify({ a: [1, undefined] }),
+  );
+});

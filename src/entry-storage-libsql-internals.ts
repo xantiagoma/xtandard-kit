@@ -17,5 +17,6 @@ export {
   sqliteKvSchema,
   sqliteKvStorage,
   type SqliteExecutor,
+  type SqliteStatement,
   type SqliteRow,
 } from "./storage/kv-sqlite.ts";

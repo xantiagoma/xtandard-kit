@@ -93,6 +93,12 @@ export function bunSqliteExecutor(db: Database): SqliteExecutor {
     async all(sql, args) {
       return db.query(sql).all(...(args as never[])) as Array<Record<string, unknown>>;
     },
+    async atomic(statements) {
+      const run = db.transaction(() =>
+        statements.map((s) => Number(db.query(s.sql).run(...(s.args as never[])).changes)),
+      );
+      return run.immediate();
+    },
   };
 }
 

@@ -71,3 +71,24 @@ describe("sqlite driver", () => {
     await expect(conn.get()).rejects.toThrow();
   });
 });
+
+describe("bunSqliteExecutor.atomic", () => {
+  test("applies every statement or none (BEGIN IMMEDIATE)", async () => {
+    const { bunSqliteExecutor } = await import("../src/storage/sqlite.ts");
+    const exec = bunSqliteExecutor(new Database(":memory:"));
+    await exec.all("CREATE TABLE t (k TEXT PRIMARY KEY, n INTEGER)", []);
+    expect(
+      await exec.atomic!([
+        { sql: "INSERT INTO t VALUES (?, ?)", args: ["a", 1] },
+        { sql: "UPDATE t SET n = n + 1 WHERE k = ?", args: ["a"] },
+      ]),
+    ).toEqual([1, 1]);
+    await expect(
+      exec.atomic!([
+        { sql: "INSERT INTO t VALUES (?, ?)", args: ["b", 1] },
+        { sql: "INSERT INTO t VALUES (?, ?)", args: ["a", 1] },
+      ]),
+    ).rejects.toThrow();
+    expect((await exec.all("SELECT k, n FROM t", [])).map((r) => [r.k, r.n])).toEqual([["a", 2]]);
+  });
+});

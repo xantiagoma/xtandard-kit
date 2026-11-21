@@ -24,6 +24,19 @@ export type SqliteRow = Record<string, unknown>;
 export interface SqliteExecutor {
   /** Run a statement and return its rows (empty for statements without `RETURNING`). */
   all(sql: string, args: unknown[]): Promise<SqliteRow[]>;
+  /**
+   * Run several write statements atomically (all or nothing), resolving with the rows each one
+   * changed. The kit's `bunSqliteExecutor` (`BEGIN IMMEDIATE`) and `libsqlExecutor`
+   * (`batch(…, "write")`) implement it; product tables that write several rows in one step use it
+   * (audit's event log, entitlements' counters).
+   */
+  atomic?(statements: readonly SqliteStatement[]): Promise<number[]>;
+}
+
+/** One statement for {@link SqliteExecutor.atomic}. */
+export interface SqliteStatement {
+  sql: string;
+  args: unknown[];
 }
 
 /** The DDL for a KV table: `key TEXT PRIMARY KEY, value TEXT NOT NULL` (validates `table`). */

@@ -447,6 +447,10 @@ runStorageConformance("postgres", () => createPostgresStorage({ client, table: f
   silently skipping those cases, and so does one that declares a capability it lacks. Pass `false`
   for what the driver doesn't have. For a `withWatch` storage, whose notifier only gives a key so
   every event is an `update`, pass `watch: { removals: false }`.
+- **MySQL with the default `utf8mb4_bin` key column** (PAD SPACE, the products' existing tables):
+  declare `padSpaceKeys: true`. The trailing-space case then expects the colliding write to throw
+  `KeyCollisionError` and leave the other key untouched. On a NO PAD table (`utf8mb4_0900_bin`),
+  leave it unset.
 - **No live Redis needed** for a product's wrapped redis driver: `fakeRedis()` (with
   `asRedisClient`) from the same subpath emulates strings, RedisJSON, the kit's Lua scripts, sorted
   sets, a repeating SCAN and glob PSUBSCRIBE. A product's own Lua scripts can be answered through

@@ -120,3 +120,35 @@ describe("libsql driver", () => {
     conn.close();
   });
 });
+
+describe("libsqlExecutor.atomic (product tables writing several rows)", () => {
+  test("applies every statement or none", async () => {
+    const { libsqlExecutor } = await import("../src/storage/libsql.ts");
+    const client = createClient({ url: ":memory:" });
+    try {
+      const exec = libsqlExecutor(client as never);
+      await exec.all("CREATE TABLE t (k TEXT PRIMARY KEY, n INTEGER)", []);
+      expect(
+        await exec.atomic!([
+          { sql: "INSERT INTO t VALUES (?, ?)", args: ["a", 1] },
+          { sql: "INSERT INTO t VALUES (?, ?)", args: ["b", 2] },
+        ]),
+      ).toEqual([1, 1]);
+      await expect(
+        exec.atomic!([
+          { sql: "INSERT INTO t VALUES (?, ?)", args: ["c", 3] },
+          { sql: "INSERT INTO t VALUES (?, ?)", args: ["a", 9] }, // duplicate key → rollback
+        ]),
+      ).rejects.toThrow();
+      expect((await exec.all("SELECT k FROM t ORDER BY k", [])).map((r) => r.k)).toEqual([
+        "a",
+        "b",
+      ]);
+      await expect(
+        libsqlExecutor({ execute: client.execute.bind(client), close() {} } as never).atomic!([]),
+      ).rejects.toThrow(/no batch/);
+    } finally {
+      client.close();
+    }
+  });
+});
