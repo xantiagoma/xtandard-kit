@@ -1,0 +1,90 @@
+# Publishes @xtandard/kit to npm (ADR 0007, ADR 0009).
+#
+#   bun run release            # changelogen: bump, CHANGELOG.md, commit, tag vX.Y.Z, push
+#   gh workflow run kit-release.yml -f tag=v0.1.2   # or (re)publish an existing tag by hand
+#
+# The reusable release-prepare.yml runs the gate, builds, packs the tarball and extracts the notes.
+# This job publishes that tarball with `npm publish --provenance`, creates the GitHub release, and
+# moves the `v0.MINOR` tag that the products' reusable-workflow references follow.
+#
+# Auth is npm trusted publishing (OIDC): no NPM_TOKEN secret. npm validates the calling workflow,
+# so the publish step must stay in THIS file, which is the one registered on npmjs.com:
+#   npm trust github @xtandard/kit --repo xantiagoma/xtandard-kit --file kit-release.yml
+# It needs npm >= 11.5.1 (Node 24 ships it).
+name: Release
+
+on:
+  push:
+    tags:
+      # Full versions only: moving the v0.MINOR tag must not trigger a release.
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to publish (e.g. v0.1.2)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    uses: ./.github/workflows/release-prepare.yml
+    with:
+      tag: ${{ inputs.tag || github.ref_name }}
+
+  publish:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # the GitHub release and the v0.MINOR tag
+      id-token: write # npm provenance (trusted publishing)
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+      TARBALL: ${{ needs.prepare.outputs.tarball }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag || github.ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: package
+          path: pack
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+          path: .
+
+      - name: Publish to npm (with provenance)
+        run: |
+          if npm view "@xtandard/kit@${VERSION}" version >/dev/null 2>&1; then
+            echo "@xtandard/kit@${VERSION} is already on npm; skipping publish."
+          else
+            npm publish "pack/${TARBALL}" --provenance --access public
+          fi
+
+      - name: Create or publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release edit "${TAG}" --draft=false --latest --notes-file notes.md
+          else
+            gh release create "${TAG}" --title "${TAG}" --notes-file notes.md --verify-tag --latest
+          fi
+
+      # Products reference the reusable workflows at @v0.MINOR, so each patch moves that tag.
+      - name: Move the v0.MINOR tag
+        run: |
+          minor="v$(echo "${VERSION}" | cut -d. -f1-2)"
+          git tag -f "${minor}" "${TAG}^{commit}"
+          git push -f origin "refs/tags/${minor}"

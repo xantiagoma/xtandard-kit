@@ -1,0 +1,43 @@
+# The kit's docs site (site/, dogfooding @xtandard/kit/site) on GitHub Pages:
+#
+#   https://me.xantiagoma.com/xtandard-kit/
+#
+# The site links the package with `file:..`, so the library is built first (`prebuild`).
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "docs/**"
+      - "README.md"
+      - "PLAN.md"
+      - "CHANGELOG.md"
+      - "src/**"
+      - "site/**"
+      - "package.json"
+      - "bun.lock"
+      - "tsconfig.json"
+      - ".github/workflows/kit-pages.yml"
+      - ".github/workflows/pages.yml"
+  pull_request:
+    paths: *paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time, never cancelled; a pull request's newer build cancels its older one.
+concurrency:
+  group: pages-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  pages:
+    uses: ./.github/workflows/pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    with:
+      prebuild: bun run build
