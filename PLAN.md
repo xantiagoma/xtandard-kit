@@ -220,6 +220,15 @@ product CHANGELOG. Examples:
 - index.html escapes the title;
 - malformed `%` in a path gives 404/400, not 500.
 
+**Found while building the kit; every product's CHANGELOG lists them under Fixes when it migrates**
+(t1r, 2026-11-21: no hotfixes). Each has a permanent regression case in the kit conformance suite:
+
+- MySQL (drizzle storage): `getKeys` silently skipped keys containing supplementary characters
+  (emoji). An indexed `LIKE 'p%'` on the `utf8mb4_bin` key misses them on MySQL 8.4. Now a range scan
+  plus `startsWith`.
+- unstorage: stored strings that look like JSON came back parsed (`"123"` → `123`). Strings are now
+  written JSON-encoded. Legacy raw strings read as before.
+
 ## 8. Phase 3 build plan (kit repo)
 
 | Step | Scope                                                                                                                                                                                         | Worker             |
