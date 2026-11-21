@@ -179,6 +179,15 @@ export const contractCases: ConformanceCase[] = [
     },
   },
   {
+    name: "strings that look like JSON stay strings",
+    async run({ storage, key, expect }) {
+      const values = ["123", "true", "null", '{"a":1}', '"quoted"', "[1]", ""];
+      for (const [i, v] of values.entries()) await storage.setItem(key("str", String(i)), v);
+      for (const [i, v] of values.entries())
+        expect(await storage.getItem(key("str", String(i)))).toBe(v);
+    },
+  },
+  {
     name: "overwrites an existing key",
     async run({ storage, key, expect }) {
       await storage.setItem(key("k"), { v: 1 });

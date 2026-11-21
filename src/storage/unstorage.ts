@@ -11,6 +11,9 @@
  * - a **trailing** `$` as `%24` (only that one; a `$` elsewhere is stored as-is, ADR 0005);
  * - an empty segment (`a//b`, `a/`) as a lone `%` (which a literal `%` never produces).
  *
+ * String values are written JSON-encoded (`"\"123\""`), because unstorage reads strings back
+ * through `destr`, which would turn `"123"` into `123`; older raw strings still read as before.
+ *
  * Reads fall back to the legacy spellings of a key containing `$` (the raw trailing `$` of the
  * older copies, and the every-`$`-encoded form), and `getKeys` lists both, so data written by
  * earlier product releases stays readable. Because unstorage matches whole segments only,
@@ -113,8 +116,11 @@ export function createUnstorageStorage(options: UnstorageStorageOptions): Unstor
     },
 
     async setItem<T>(key: string, value: T): Promise<void> {
-      // unstorage's setItem rejects `undefined`; the contract never stores it.
-      await storage.setItem(toUnstorageKey(key), value as NonNullable<T>);
+      // unstorage stores a string verbatim and reads it back through `destr`, which turns "123"
+      // into 123: write strings JSON-encoded (`destr` reads both forms). unstorage's setItem
+      // rejects `undefined`; the contract never stores it.
+      const stored = typeof value === "string" ? JSON.stringify(value) : value;
+      await storage.setItem(toUnstorageKey(key), stored as NonNullable<T>);
       await removeLegacy(key);
     },
 
