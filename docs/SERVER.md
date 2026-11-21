@@ -125,7 +125,8 @@ mapError(err, {
 - Built-ins, each overridable by an entry with the same name:
   - `HttpError`;
   - `HookDeniedError` from any bundle → its status, `HOOK_DENIED`;
-  - a kit `TokenError` → 401;
+  - a kit `TokenError`, or any error named `*TokenError` (`PortalTokenError`, `ViewerTokenError`,
+    also from another bundle) → 401 `TOKEN`;
   - `ValidationError` → 400 with `errors`;
   - `SyntaxError` → 400 "Invalid JSON body".
 - Anything else → 500 with the error's message.

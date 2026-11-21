@@ -120,6 +120,16 @@ describe("mapError", () => {
       body: { error: "expired", code: "TOKEN" },
     });
     expect(mapError(Object.assign(new Error("x"), { name: "TokenError" })).status).toBe(401);
+    // Products name their token errors; a copy from another bundle fails `instanceof` but still
+    // maps to 401 by name (not 500).
+    for (const name of ["PortalTokenError", "ViewerTokenError"]) {
+      const foreign = { name, message: "Portal token has expired" };
+      expect(await body(mapError(foreign))).toEqual({
+        status: 401,
+        body: { error: "Portal token has expired", code: "TOKEN" },
+      });
+    }
+    expect(mapError(Object.assign(new Error("x"), { name: "Tokenizer" })).status).toBe(500);
     expect(
       await body(mapError(new ValidationError([{ path: "a", message: "bad" }]))),
     ).toMatchObject({

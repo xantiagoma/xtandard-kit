@@ -121,7 +121,8 @@ export type ErrorMap = Record<string, ErrorMapping>;
  * 2. An entry of `errors` matching the error's `name`.
  * 3. Built-ins (each overridable by an `errors` entry of the same name):
  *    `HookDeniedError` (any bundle) → its status, `code: "HOOK_DENIED"`; a
- *    kit `TokenError` → 401; `ValidationError` → 400 `code: "VALIDATION"`
+ *    kit `TokenError`, or any error named `*TokenError` (`PortalTokenError`,
+ *    `ViewerTokenError` from another bundle) → 401 `code: "TOKEN"`; `ValidationError` → 400 `code: "VALIDATION"`
  *    with `errors`; `SyntaxError` → 400 "Invalid JSON body".
  * 4. Anything else → 500 with the error message.
  */
@@ -139,7 +140,7 @@ export function mapError(err: unknown, errors: ErrorMap = {}): Response {
     }
     const denied = hookDeniedStatus(e);
     if (denied !== null) return error(denied, e.message, { code: "HOOK_DENIED" });
-    if (e instanceof TokenError || e.name === "TokenError")
+    if (e instanceof TokenError || e.name.endsWith("TokenError"))
       return error(401, e.message, { code: "TOKEN" });
     if (e.name === "ValidationError") {
       const list = (e as { errors?: unknown }).errors;
