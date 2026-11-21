@@ -271,6 +271,7 @@ export function createDrizzleStorage(options: DrizzleStorageOptions): DrizzleKvS
       }
       // On a PAD SPACE key column `'a '` hits the row `'a'`: update only a byte-exact match and make
       // a mismatch fail the statement (an invalid JSON cast) instead of overwriting another key.
+      // `VALUES()` is deprecated since MySQL 8.0.20 but kept: MariaDB has no row alias (`AS new`).
       const sql = await drizzleSql();
       try {
         await insert.onDuplicateKeyUpdate!({
