@@ -41,6 +41,13 @@ Fixes and additions found by migrating the five products onto the kit. Backwards
   modules, so capability layers and persisted defaults survive. `isMainModule(import.meta.url)`
   accepts a URL (a bare `import.meta` warns in CJS builds).
 - **util:** `validateKeySegment(value, path, { maxLength })`.
+- **util:** `@xtandard/kit/util/core`, the dependency-free part of `util` (durations, ids, canonical
+  JSON, types), which never loads `valibot` (en).
+- **server/router:** `readonlyMessage` may be a function of the route (en).
+- **cli:** `storageFromEnv` and `resolveStorageConfig` take a `driver` override, e.g. from a
+  `--storage` flag (en).
+- **storage/drizzle internals:** `DrizzleLikeDatabase` has optional `execute` and `transaction`
+  (en's counters).
 - **build:** the example runner gets a `seed` step, and `demo` is optional.
 - **storage/testing:** a `padSpaceKeys` capability, so the trailing-space case expects
   `KeyCollisionError` on a PAD SPACE MySQL key column (the products' default) instead of failing.
