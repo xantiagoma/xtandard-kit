@@ -151,6 +151,23 @@ describe("bits", () => {
       expect(screen.getByText(text)).toBeTruthy();
   });
 
+  it("SectionCard is a named region; flush drops the body padding; id and aria-label pass through", () => {
+    render(
+      <>
+        <SectionCard title="Customers by plan" id="by-plan" flush>
+          <table />
+        </SectionCard>
+        <SectionCard title={<span>Rich</span>} aria-label="Usage">
+          body
+        </SectionCard>
+      </>,
+    );
+    const region = screen.getByRole("region", { name: "Customers by plan" });
+    expect(region.id).toBe("by-plan");
+    expect(region.lastElementChild?.className).toBe("");
+    expect(screen.getByRole("region", { name: "Usage" })).toBeTruthy();
+  });
+
   it("ConfirmDialog confirms and cancels", () => {
     const onClose = vi.fn();
     const onConfirm = vi.fn();

@@ -98,7 +98,10 @@ export function PageHeader({
 
 /* ─── SectionCard ───────────────────────────────────────────────────────────── */
 
-/** A bordered card with a titled header row and a padded body. */
+/**
+ * A bordered card with a titled header row and a padded body. A string `title` also labels the
+ * `<section>` (`aria-label`), so the card is a named region in the accessibility tree.
+ */
 export function SectionCard({
   title,
   description,
@@ -106,26 +109,39 @@ export function SectionCard({
   children,
   className,
   bodyClassName,
+  flush,
+  id,
+  "aria-label": ariaLabel,
 }: {
   title: React.ReactNode;
   description?: React.ReactNode;
+  /** Right-aligned header controls. */
   actions?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
   bodyClassName?: string;
+  /** No body padding (tables and lists that run edge to edge). */
+  flush?: boolean;
+  id?: string;
+  /** The region's accessible name. Default: `title` when it is a string. */
+  "aria-label"?: string;
 }): React.ReactElement {
   return (
-    <section className={cn("rounded-xl border border-border bg-card", className)}>
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+    <section
+      id={id}
+      aria-label={ariaLabel ?? (typeof title === "string" ? title : undefined)}
+      className={cn("rounded-xl border border-border bg-card", className)}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div className="min-w-0">
           <h2 className="text-[13px] font-semibold text-foreground">{title}</h2>
           {description ? (
             <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
           ) : null}
         </div>
-        {actions}
+        {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
       </div>
-      <div className={cn("px-4 py-4", bodyClassName)}>{children}</div>
+      <div className={cn(flush ? "" : "px-4 py-4", bodyClassName)}>{children}</div>
     </section>
   );
 }
