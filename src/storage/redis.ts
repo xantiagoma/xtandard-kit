@@ -62,6 +62,12 @@ export type RedisWriteHook = (
 
 /** Options for {@link createRedisStorage} and {@link createRedisJSONStorage}. */
 export interface RedisStorageOptions {
+  /**
+   * The import path to name in error messages (a missing peer, a missing `client`/`url`…), e.g.
+   * `"@xtandard/webhooks/storage/redis"` when a product re-exports this driver. Default: the kit
+   * subpath.
+   */
+  subpath?: string;
   /** Connection URL (e.g. `redis://localhost:6379`). Used when no `client` is given. */
   url?: string;
   /** A pre-constructed (optionally pre-connected) node-redis client. Never closed by the driver. */
@@ -293,7 +299,7 @@ export interface RedisKvStorageOptions extends RedisStorageOptions {
 export function createRedisKvStorage(options: RedisKvStorageOptions): RedisKvStorage {
   const { codec, onWrite } = options;
   const fullPrefix = options.prefix ? `${options.prefix}:` : "";
-  const connection = options.connection ?? redisConnection(options);
+  const connection = options.connection ?? redisConnection(options, options.subpath ?? SUBPATH);
   const getClient = connection.get;
 
   const toRedisKey = (key: string): string => `${fullPrefix}${key}`;

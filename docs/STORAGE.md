@@ -43,6 +43,18 @@ export type {
 export { isWatchable, isCompareAndSwap, requirePeer } from "@xtandard/kit/storage";
 ```
 
+Wrappers should also pass `subpath` (sqlite, libsql, postgres, mongodb, redis, drizzle), so that
+errors such as a missing peer or a missing `client`/`url` name the import path the user wrote:
+
+```ts
+export const createMongoStorage = (o: MongoStorageOptions) =>
+  kit.createMongoStorage({
+    dbName: "xtandard_webhooks",
+    ...o,
+    subpath: "@xtandard/webhooks/storage/mongodb",
+  });
+```
+
 ## Drivers
 
 | Subpath                                         | Factory                                                             | Peer                                              | watch                              | CAS                   | Extension points (ADR 0004)          |

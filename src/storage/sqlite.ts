@@ -19,6 +19,12 @@ const SUBPATH = "@xtandard/kit/storage/sqlite";
 
 /** Options for {@link createSqliteStorage}. */
 export interface SqliteStorageOptions {
+  /**
+   * The import path to name in error messages (a missing peer, a missing `client`/`url`…), e.g.
+   * `"@xtandard/webhooks/storage/sqlite"` when a product re-exports this driver. Default: the kit
+   * subpath.
+   */
+  subpath?: string;
   /** Database file path. Default `":memory:"`. Ignored when `database` is given. */
   path?: string;
   /** An existing `bun:sqlite` `Database` to use instead of opening one. Never closed. */
@@ -48,6 +54,7 @@ export interface SqliteConnection {
 export function sqliteConnection(
   options: Pick<SqliteStorageOptions, "path" | "database">,
   ddl: string[],
+  subpath = SUBPATH,
 ): SqliteConnection {
   let db: Database | undefined = options.database;
   const ownsDb = !options.database;
@@ -57,11 +64,11 @@ export function sqliteConnection(
       ready ??= (async () => {
         if (!db) {
           if (typeof (globalThis as { Bun?: unknown }).Bun === "undefined") {
-            throw new Error(`${SUBPATH} requires the Bun runtime (bun:sqlite)`);
+            throw new Error(`${subpath} requires the Bun runtime (bun:sqlite)`);
           }
           const { Database: Ctor } = await importPeer(
             "bun:sqlite",
-            SUBPATH,
+            subpath,
             () => import("bun:sqlite"),
           );
           db = new Ctor(options.path ?? ":memory:");
@@ -101,7 +108,7 @@ export function bunSqliteExecutor(db: Database): SqliteExecutor {
  */
 export function createSqliteStorage(options: SqliteStorageOptions = {}): SqliteKvStorage {
   const table = assertIdentifier(options.table ?? "xtandard_kv");
-  const connection = sqliteConnection(options, [sqliteKvSchema(table)]);
+  const connection = sqliteConnection(options, [sqliteKvSchema(table)], options.subpath ?? SUBPATH);
   return {
     ...sqliteKvStorage(table, async () => bunSqliteExecutor(await connection.get())),
     close: connection.close,

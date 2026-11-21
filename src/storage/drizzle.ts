@@ -93,7 +93,7 @@ const DIALECT_KINDS: Record<string, DrizzleDialect> = {
  * Detect a Drizzle database's dialect from its `dialect` object's class chain (`PgDialect` /
  * `MySqlDialect` / `SQLite{Sync,Async}Dialect`). Semi-public (ADR 0004).
  */
-export function detectDrizzleDialect(db: unknown): DrizzleDialect {
+export function detectDrizzleDialect(db: unknown, subpath = SUBPATH): DrizzleDialect {
   let proto: unknown = (db as DrizzleLikeDatabase | null)?.dialect;
   while (proto) {
     const kind = (proto as { constructor?: Record<symbol, unknown> }).constructor?.[ENTITY_KIND];
@@ -101,7 +101,7 @@ export function detectDrizzleDialect(db: unknown): DrizzleDialect {
     proto = Object.getPrototypeOf(proto);
   }
   throw new Error(
-    `${SUBPATH}: cannot detect the Drizzle dialect of \`db\`; pass \`dialect: "pg" | "mysql" | "sqlite"\`.`,
+    `${subpath}: cannot detect the Drizzle dialect of \`db\`; pass \`dialect: "pg" | "mysql" | "sqlite"\`.`,
   );
 }
 
@@ -117,8 +117,8 @@ type SqlTag = typeof import("drizzle-orm").sql;
 let sqlTag: Promise<SqlTag> | undefined;
 
 /** The `sql` template tag of `drizzle-orm`, imported once (lazily). Semi-public. */
-export function drizzleSql(): Promise<SqlTag> {
-  sqlTag ??= importPeer("drizzle-orm", SUBPATH, () => import("drizzle-orm"))
+export function drizzleSql(subpath = SUBPATH): Promise<SqlTag> {
+  sqlTag ??= importPeer("drizzle-orm", subpath, () => import("drizzle-orm"))
     .then((m) => m.sql)
     .catch((error: unknown) => {
       sqlTag = undefined;
@@ -156,7 +156,12 @@ export class KeyCollisionError extends Error {
   /** The stored key it collides with (when it could be read back). */
   readonly storedKey: string | undefined;
 
-  constructor(key: string, storedKey: string | undefined, table: DrizzleKvTable) {
+  constructor(
+    key: string,
+    storedKey: string | undefined,
+    table: DrizzleKvTable,
+    subpath = SUBPATH,
+  ) {
     const name = String((table as unknown as Record<symbol, unknown>)[Symbol.for("drizzle:Name")]);
     const type = (table.key as { getSQLType?: () => string }).getSQLType?.() ?? "varchar(512)";
     const target = type.replace(/COLLATE\s+\w+/i, "COLLATE utf8mb4_0900_bin");
@@ -164,7 +169,7 @@ export class KeyCollisionError extends Error {
       ? target
       : `${target} CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin`;
     super(
-      `${SUBPATH}: key ${JSON.stringify(key)} collides with the stored key ${JSON.stringify(storedKey)} ` +
+      `${subpath}: key ${JSON.stringify(key)} collides with the stored key ${JSON.stringify(storedKey)} ` +
         `in MySQL table \`${name}\`: its key column uses a PAD SPACE collation (utf8mb4_bin), which ` +
         "ignores trailing spaces. Nothing was overwritten. Migrate the column to a NO PAD collation: " +
         `ALTER TABLE \`${name}\` MODIFY \`key\` ${withCollation} NOT NULL; ` +
@@ -188,6 +193,12 @@ function isInvalidJsonCast(error: unknown): boolean {
 
 /** Options for {@link createDrizzleStorage}. */
 export interface DrizzleStorageOptions {
+  /**
+   * The import path to name in error messages (a missing peer, a missing `client`/`url`…), e.g.
+   * `"@xtandard/webhooks/storage/drizzle"` when a product re-exports this driver. Default: the kit
+   * subpath.
+   */
+  subpath?: string;
   /** Your Drizzle database (node-postgres, postgres-js, mysql2, bun:sqlite, libsql, pglite, …). */
   db: unknown;
   /** The KV table, built with a `@xtandard/kit/drizzle/*` factory (or matching its shape). */
@@ -218,7 +229,8 @@ export type DrizzleKvStorage = CompareAndSwapKvStorage;
 export function createDrizzleStorage(options: DrizzleStorageOptions): DrizzleKvStorage {
   const db = options.db as DrizzleLikeDatabase;
   const { table } = options;
-  const dialect = options.dialect ?? detectDrizzleDialect(db);
+  const subpath = options.subpath ?? SUBPATH;
+  const dialect = options.dialect ?? detectDrizzleDialect(db, subpath);
 
   /** The value column as JSON text, so it is parsed exactly once. */
   const rawValue = (sql: SqlTag): SQL =>
@@ -247,7 +259,7 @@ export function createDrizzleStorage(options: DrizzleStorageOptions): DrizzleKvS
   }
 
   async function readRaw(key: string): Promise<string | null> {
-    const sql = await drizzleSql();
+    const sql = await drizzleSql(subpath);
     const rows = (await db
       .select({ value: rawValue(sql) })
       .from(table)
@@ -272,7 +284,7 @@ export function createDrizzleStorage(options: DrizzleStorageOptions): DrizzleKvS
       // On a PAD SPACE key column `'a '` hits the row `'a'`: update only a byte-exact match and make
       // a mismatch fail the statement (an invalid JSON cast) instead of overwriting another key.
       // `VALUES()` is deprecated since MySQL 8.0.20 but kept: MariaDB has no row alias (`AS new`).
-      const sql = await drizzleSql();
+      const sql = await drizzleSql(subpath);
       try {
         await insert.onDuplicateKeyUpdate!({
           set: {
@@ -281,17 +293,17 @@ export function createDrizzleStorage(options: DrizzleStorageOptions): DrizzleKvS
         });
       } catch (error) {
         if (!isInvalidJsonCast(error)) throw error;
-        throw new KeyCollisionError(key, await storedSpelling(sql, key), table);
+        throw new KeyCollisionError(key, await storedSpelling(sql, key), table, subpath);
       }
     },
 
     async removeItem(key: string): Promise<void> {
-      const sql = await drizzleSql();
+      const sql = await drizzleSql(subpath);
       await db.delete(table).where(keyIs(sql, key));
     },
 
     async getKeys(prefix: string): Promise<string[]> {
-      const sql = await drizzleSql();
+      const sql = await drizzleSql(subpath);
       const upper = dialect === "mysql" ? prefixSuccessor(prefix) : undefined;
       const where =
         dialect === "sqlite"
@@ -311,7 +323,7 @@ export function createDrizzleStorage(options: DrizzleStorageOptions): DrizzleKvS
     },
 
     async compareAndSwap<T>(input: CompareAndSwapInput<T>): Promise<boolean> {
-      const sql = await drizzleSql();
+      const sql = await drizzleSql(subpath);
       const next = canonical(input.next);
       if (input.expected === null) {
         if (dialect === "mysql") {
