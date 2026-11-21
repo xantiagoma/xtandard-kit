@@ -1,9 +1,15 @@
 /**
- * `@xtandard/kit/storage/mongodb` — not implemented yet.
+ * `@xtandard/kit/storage/mongodb` — MongoDB storage: one `{ _id: key, value }` collection over the
+ * `mongodb` driver, with single-update compare-and-swap that also swaps documents written before
+ * canonicalisation.
  *
- * Optional peer(s): `mongodb`.
+ * Optional peer: `mongodb` (loaded on first use).
  *
  * @module
  */
 
-export {};
+export {
+  createMongoStorage,
+  type MongoKvStorage,
+  type MongoStorageOptions,
+} from "./storage/mongodb.ts";
