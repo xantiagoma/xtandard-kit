@@ -20,12 +20,24 @@ import type { DrizzleKvTable } from "./table.ts";
 export type { DrizzleKvTable } from "./table.ts";
 
 /**
- * A `varchar(length) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin` column: case- and accent-sensitive,
- * byte-exact. `length` defaults to 512; keep it within your InnoDB index-prefix limit for keys.
+ * A binary key collation: `utf8mb4_bin` (default; PAD SPACE, so `"a "` and `"a"` compare equal),
+ * or a NO PAD one for new tables: `utf8mb4_0900_bin` (MySQL 8.0+) or `utf8mb4_nopad_bin` (MariaDB).
  */
-export function binVarchar(name: string, length = 512) {
+export type MysqlKeyCollation = "utf8mb4_bin" | "utf8mb4_0900_bin" | "utf8mb4_nopad_bin";
+
+/**
+ * A `varchar(length) CHARACTER SET utf8mb4 COLLATE <collation>` column: case- and accent-sensitive.
+ * `length` defaults to 512 (keep it within your InnoDB index-prefix limit for keys); `collation`
+ * defaults to `utf8mb4_bin`. Pass a NO PAD collation ({@link MysqlKeyCollation}) for keys that may
+ * differ only by trailing spaces.
+ */
+export function binVarchar(
+  name: string,
+  length = 512,
+  collation: MysqlKeyCollation = "utf8mb4_bin",
+) {
   return customType<{ data: string; driverData: string }>({
-    dataType: () => `varchar(${length}) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin`,
+    dataType: () => `varchar(${length}) CHARACTER SET utf8mb4 COLLATE ${collation}`,
   })(name);
 }
 
@@ -36,6 +48,12 @@ export type MysqlKvColumns = BuildColumns<string, Record<string, MySqlColumnBuil
 export interface MysqlKvTableOptions {
   /** `varchar` length of the `key` primary key. Default `512`. */
   keyLength?: number;
+  /**
+   * Collation of the `key` column. Default `"utf8mb4_bin"` (unchanged, so existing schemas generate
+   * no migration). `"utf8mb4_0900_bin"` (MySQL 8.0+) or `"utf8mb4_nopad_bin"` (MariaDB) are NO PAD:
+   * they keep keys that differ only by trailing spaces distinct; recommended for new tables.
+   */
+  keyCollation?: MysqlKeyCollation;
   /** Additional columns merged into the table. */
   extraColumns?: () => Record<string, MySqlColumnBuilderBase>;
   /** Additional indexes/constraints; receives the built columns. */
@@ -54,7 +72,7 @@ export interface MysqlKvTableOptions {
  */
 export function mysqlKvTable(name: string, opts?: MysqlKvTableOptions): DrizzleKvTable {
   const columns = {
-    key: binVarchar("key", opts?.keyLength ?? 512).primaryKey(),
+    key: binVarchar("key", opts?.keyLength ?? 512, opts?.keyCollation).primaryKey(),
     value: json("value").notNull(),
     ...opts?.extraColumns?.(),
   };

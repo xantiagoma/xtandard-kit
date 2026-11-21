@@ -9,6 +9,7 @@
  */
 
 export {
+  KeyCollisionError,
   createDrizzleStorage,
   type DrizzleDialect,
   type DrizzleKvStorage,

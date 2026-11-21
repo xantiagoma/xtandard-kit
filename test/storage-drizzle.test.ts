@@ -14,6 +14,7 @@ import {
   affectedRows,
   createDrizzleStorage,
   detectDrizzleDialect,
+  KeyCollisionError,
   prefixSuccessor,
 } from "../src/storage/drizzle.ts";
 import { runStorageConformance } from "../src/storage/testing/conformance.ts";
@@ -170,6 +171,13 @@ describe("drizzle table factories", () => {
     expect(withId.columns[2]?.getSQLType()).toBe(
       "varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin",
     );
+    // Opt-in NO PAD collation (default unchanged, ADR 0005).
+    const noPad = mysqlConfig(mysqlKvTable("kv3", { keyCollation: "utf8mb4_0900_bin" }) as never);
+    expect(noPad.columns[0]?.getSQLType()).toBe(
+      "varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin",
+    );
+    const maria = mysqlConfig(mysqlKvTable("kv4", { keyCollation: "utf8mb4_nopad_bin" }) as never);
+    expect(maria.columns[0]?.getSQLType()).toContain("COLLATE utf8mb4_nopad_bin");
   });
 
   test("sqliteKvTable: text key, JSON text value", () => {
@@ -178,6 +186,45 @@ describe("drizzle table factories", () => {
       ["key", "text"],
       ["value", "text"],
     ]);
+  });
+});
+
+describe("MySQL PAD SPACE guard (fake db)", () => {
+  const padDb = (error: unknown) => ({
+    dialect: undefined,
+    select: () => ({ from: () => ({ where: async () => [{ key: "k/a" }] }) }),
+    insert: () => ({
+      values: () => ({ onDuplicateKeyUpdate: () => Promise.reject(error) }),
+    }),
+    update: () => ({}),
+    delete: () => ({}),
+  });
+
+  test("an invalid-JSON-cast failure (possibly wrapped) becomes a KeyCollisionError", async () => {
+    const wrapped = Object.assign(new Error("Failed query"), {
+      cause: { errno: 3141, code: "ER_INVALID_JSON_TEXT_IN_PARAM" },
+    });
+    const storage = createDrizzleStorage({
+      db: padDb(wrapped),
+      table: mysqlKvTable("kv"),
+      dialect: "mysql",
+    });
+    const error = await storage.setItem("k/a ", 1).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(KeyCollisionError);
+    expect((error as KeyCollisionError).key).toBe("k/a ");
+    expect((error as Error).message).toMatch(
+      /PAD SPACE.*ALTER TABLE `kv` MODIFY `key` varchar\(512\)/s,
+    );
+  });
+
+  test("other write errors pass through unchanged", async () => {
+    const boom = new Error("connection lost");
+    const storage = createDrizzleStorage({
+      db: padDb(boom),
+      table: mysqlKvTable("kv"),
+      dialect: "mysql",
+    });
+    await expect(storage.setItem("k", 1)).rejects.toBe(boom);
   });
 });
 

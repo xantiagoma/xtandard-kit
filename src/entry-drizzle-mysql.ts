@@ -9,6 +9,7 @@ export {
   binVarchar,
   mysqlKvTable,
   type DrizzleKvTable,
+  type MysqlKeyCollation,
   type MysqlKvColumns,
   type MysqlKvTableOptions,
 } from "./drizzle/mysql.ts";

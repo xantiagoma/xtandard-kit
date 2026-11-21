@@ -15,6 +15,11 @@
  *   key): `jsonb` equality on Postgres and `JSON` equality on MySQL (both structural), canonical
  *   text on SQLite with a structural fallback for rows written before canonicalisation.
  *
+ * - MySQL `utf8mb4_bin` keys are PAD SPACE (`"a "` = `"a"`): reads, removes and swaps match keys
+ *   byte-exactly, and a write whose key differs from a stored one only by trailing spaces throws
+ *   {@link KeyCollisionError} instead of overwriting it. `mysqlKvTable(name, { keyCollation:
+ *   "utf8mb4_0900_bin" })` (NO PAD) avoids the collision.
+ *
  * `drizzle-orm` is loaded lazily on first use, so importing this subpath never loads the peer.
  *
  * @module
@@ -139,6 +144,48 @@ export function prefixSuccessor(prefix: string): string | undefined {
   return undefined;
 }
 
+/**
+ * Thrown by `setItem` on MySQL when the key column's collation is PAD SPACE (`utf8mb4_bin`) and the
+ * key differs from a stored key only by trailing spaces (`"a "` vs `"a"`): the write is refused
+ * instead of overwriting the other key. The message carries the migration SQL to a NO PAD
+ * collation (`utf8mb4_0900_bin`).
+ */
+export class KeyCollisionError extends Error {
+  /** The key that was written. */
+  readonly key: string;
+  /** The stored key it collides with (when it could be read back). */
+  readonly storedKey: string | undefined;
+
+  constructor(key: string, storedKey: string | undefined, table: DrizzleKvTable) {
+    const name = String((table as unknown as Record<symbol, unknown>)[Symbol.for("drizzle:Name")]);
+    const type = (table.key as { getSQLType?: () => string }).getSQLType?.() ?? "varchar(512)";
+    const target = type.replace(/COLLATE\s+\w+/i, "COLLATE utf8mb4_0900_bin");
+    const withCollation = /COLLATE/i.test(target)
+      ? target
+      : `${target} CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin`;
+    super(
+      `${SUBPATH}: key ${JSON.stringify(key)} collides with the stored key ${JSON.stringify(storedKey)} ` +
+        `in MySQL table \`${name}\`: its key column uses a PAD SPACE collation (utf8mb4_bin), which ` +
+        "ignores trailing spaces. Nothing was overwritten. Migrate the column to a NO PAD collation: " +
+        `ALTER TABLE \`${name}\` MODIFY \`key\` ${withCollation} NOT NULL; ` +
+        "(on MariaDB use utf8mb4_nopad_bin).",
+    );
+    this.name = "KeyCollisionError";
+    this.key = key;
+    this.storedKey = storedKey;
+  }
+}
+
+/** A MySQL "invalid JSON text" error (3141), possibly wrapped by Drizzle in `cause`. */
+function isInvalidJsonCast(error: unknown): boolean {
+  for (let e: unknown = error, depth = 0; e && depth < 4; depth++) {
+    const { errno, code } = e as { errno?: unknown; code?: unknown };
+    if (errno === 3141 || code === "ER_INVALID_JSON_TEXT_IN_PARAM") return true;
+    e = (e as { cause?: unknown }).cause;
+  }
+  return false;
+}
+
 /** Options for {@link createDrizzleStorage}. */
 export interface DrizzleStorageOptions {
   /** Your Drizzle database (node-postgres, postgres-js, mysql2, bun:sqlite, libsql, pglite, …). */
@@ -181,7 +228,23 @@ export function createDrizzleStorage(options: DrizzleStorageOptions): DrizzleKvS
         ? sql`cast(${table.value} as char)`
         : sql`cast(${table.value} as text)`;
 
-  const keyIs = (sql: SqlTag, key: string): SQL => sql`${table.key} = ${key}`;
+  /**
+   * Exact key match. On MySQL also byte-exact: `utf8mb4_bin` is a PAD SPACE collation, so `key = 'a '`
+   * would match the row `'a'`.
+   */
+  const keyIs = (sql: SqlTag, key: string): SQL =>
+    dialect === "mysql"
+      ? sql`${table.key} = ${key} and cast(${table.key} as binary) = cast(${key} as binary)`
+      : sql`${table.key} = ${key}`;
+
+  /** The stored spelling of the row a PAD SPACE comparison matches for `key`. */
+  async function storedSpelling(sql: SqlTag, key: string): Promise<string | undefined> {
+    const rows = (await db
+      .select({ key: table.key })
+      .from(table)
+      .where(sql`${table.key} = ${key}`)) as Array<{ key: unknown }>;
+    return rows[0] === undefined ? undefined : String(rows[0].key);
+  }
 
   async function readRaw(key: string): Promise<string | null> {
     const sql = await drizzleSql();
@@ -202,8 +265,23 @@ export function createDrizzleStorage(options: DrizzleStorageOptions): DrizzleKvS
     async setItem<T>(key: string, value: T): Promise<void> {
       const stored = canonical(value);
       const insert = db.insert(table).values({ key, value: stored });
-      if (dialect === "mysql") await insert.onDuplicateKeyUpdate!({ set: { value: stored } });
-      else await insert.onConflictDoUpdate!({ target: table.key, set: { value: stored } });
+      if (dialect !== "mysql") {
+        await insert.onConflictDoUpdate!({ target: table.key, set: { value: stored } });
+        return;
+      }
+      // On a PAD SPACE key column `'a '` hits the row `'a'`: update only a byte-exact match and make
+      // a mismatch fail the statement (an invalid JSON cast) instead of overwriting another key.
+      const sql = await drizzleSql();
+      try {
+        await insert.onDuplicateKeyUpdate!({
+          set: {
+            value: sql`if(cast(${table.key} as binary) = cast(values(${table.key}) as binary), values(${table.value}), cast(concat('kit-key-collision:', values(${table.key})) as json))`,
+          },
+        });
+      } catch (error) {
+        if (!isInvalidJsonCast(error)) throw error;
+        throw new KeyCollisionError(key, await storedSpelling(sql, key), table);
+      }
     },
 
     async removeItem(key: string): Promise<void> {
