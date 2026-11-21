@@ -309,6 +309,21 @@ export const contractCases: ConformanceCase[] = [
     },
   },
   {
+    name: "keys differing only by trailing spaces stay distinct",
+    async run({ storage, key, expect }) {
+      const keys = [key("sp", "a"), key("sp", "a "), key("sp", "a  "), key("sp", "a", " ")];
+      for (const [i, k] of keys.entries()) await storage.setItem(k, { i });
+      for (const [i, k] of keys.entries()) expect(await storage.getItem(k)).toEqual({ i });
+      expect(sorted(await storage.getKeys(key("sp", "")))).toEqual(sorted(keys));
+      expect(sorted(await storage.getKeys(key("sp", "a ")))).toEqual(
+        sorted([key("sp", "a "), key("sp", "a  ")]),
+      );
+      await storage.removeItem(key("sp", "a "));
+      expect(await storage.getItem(key("sp", "a"))).toEqual({ i: 0 });
+      expect(await storage.getItem(key("sp", "a "))).toBeNull();
+    },
+  },
+  {
     name: "unicode keys (emoji, CJK, NFC ≠ NFD) round-trip and stay distinct",
     async run({ storage, key, expect }) {
       const nfc = "café";
