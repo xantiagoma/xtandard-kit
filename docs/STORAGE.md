@@ -45,12 +45,17 @@ export { isWatchable, isCompareAndSwap, requirePeer } from "@xtandard/kit/storag
 
 ## Drivers
 
-| Subpath                 | Factory                     | Peer          | watch           | CAS            | Extension points (ADR 0004) |
-| ----------------------- | --------------------------- | ------------- | --------------- | -------------- | --------------------------- |
-| `storage/memory`        | `createMemoryStorage`       | —             | ✓               | ✓              | `onWrite`                   |
-| `storage/file`          | `createFileStorage`         | —             | ✓ (`fs.watch`)  | ✓ (in-process) | —                           |
-| `storage/unstorage`     | `createUnstorageStorage`    | `unstorage`   | via `withWatch` | —              | —                           |
-| `storage/cloudflare-kv` | `createCloudflareKvStorage` | — (a binding) | via `withWatch` | —              | —                           |
+| Subpath                                         | Factory                                                             | Peer                                              | watch                              | CAS                   | Extension points (ADR 0004)  |
+| ----------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------- | --------------------- | ---------------------------- |
+| `storage/memory`                                | `createMemoryStorage`                                               | —                                                 | ✓                                  | ✓                     | `onWrite`                    |
+| `storage/file`                                  | `createFileStorage`                                                 | —                                                 | ✓ (`fs.watch`)                     | ✓ (in-process)        | —                            |
+| `storage/unstorage`                             | `createUnstorageStorage`                                            | `unstorage`                                       | via `withWatch`                    | —                     | —                            |
+| `storage/cloudflare-kv`                         | `createCloudflareKvStorage`                                         | — (a binding)                                     | via `withWatch`                    | —                     | —                            |
+| `storage/sqlite`                                | `createSqliteStorage`                                               | — (`bun:sqlite`, Bun only)                        | via `withWatch`                    | ✓                     | `storage/sqlite/internals`   |
+| `storage/libsql`                                | `createLibsqlStorage`                                               | `@libsql/client`                                  | via `withWatch`                    | ✓                     | `storage/libsql/internals`   |
+| `storage/postgres`                              | `createPostgresStorage`, `postgresStorageSchema`                    | `pg` (only for a connection string)               | via `withWatch` + `pgListenNotify` | ✓                     | `storage/postgres/internals` |
+| `storage/drizzle`                               | `createDrizzleStorage`                                              | `drizzle-orm`                                     | via `withWatch`                    | ✓ (pg, mysql, sqlite) | `storage/drizzle/internals`  |
+| `drizzle/pg`, `drizzle/mysql`, `drizzle/sqlite` | `pgKvTable`, `mysqlKvTable`, `sqliteKvTable`, `textC`, `binVarchar` | `drizzle-orm` (**required**: imported statically) | —                                  | —                     | —                            |
 
 Conventions shared by every driver:
 
@@ -141,6 +146,80 @@ const storage = createCloudflareKvStorage({ namespace: env.DATA, prefix: "prod" 
 Eventually consistent (up to ~60 s), paginated listing, no `compareAndSwap`. `prefix` is joined
 with `:` and stripped from `getKeys`.
 
+### SQLite (`bun:sqlite`) and libSQL
+
+```ts
+import { createSqliteStorage } from "@xtandard/kit/storage/sqlite";
+import { createLibsqlStorage } from "@xtandard/kit/storage/libsql";
+
+const local = createSqliteStorage({ path: "./data.sqlite", table: "xtandard_kv" }); // or { database }
+const turso = createLibsqlStorage({
+  url: process.env.TURSO_DATABASE_URL!,
+  authToken,
+  table: "xtandard_kv",
+}); // or { client }
+```
+
+Both share one SQLite-dialect core: `key TEXT PRIMARY KEY, value TEXT NOT NULL`, values written as
+canonical JSON, `getKeys` with `GLOB` (case-sensitive, index-usable), and `compareAndSwap` as one
+conditional `UPDATE … WHERE value = ?` (or `INSERT … ON CONFLICT DO NOTHING`). The table is created
+on first use; a failed connect or DDL is retried on the next call. `bun:sqlite` is loaded on first
+use, so importing `storage/sqlite` works under Node (opening a database needs Bun).
+
+### Postgres
+
+```ts
+import { createPostgresStorage, postgresStorageSchema } from "@xtandard/kit/storage/postgres";
+
+const storage = createPostgresStorage({
+  connectionString: process.env.DATABASE_URL,
+  table: "xtandard_kv",
+});
+// or { client: pool } / { client: new PGlite() }; postgresStorageSchema(table) is the DDL for migrations
+```
+
+`key text COLLATE "C" PRIMARY KEY, value jsonb NOT NULL`. The `"C"` collation applies to **new
+tables only**; existing tables keep working because prefixes are matched with `LIKE … ESCAPE '!'`
+plus an exact `startsWith`. To get bytewise, index-usable prefixes on an older table:
+
+```sql
+ALTER TABLE xtandard_kv ALTER COLUMN key TYPE text COLLATE "C";
+```
+
+Values are read as `value::text` and parsed once. `compareAndSwap` compares `jsonb` (structural), so
+rows written before canonicalisation swap too. A failed DDL is retried, not cached.
+
+### Drizzle
+
+```ts
+// schema.ts — needs drizzle-orm installed (the drizzle/* subpaths import it statically)
+import { pgKvTable } from "@xtandard/kit/drizzle/pg";
+export const kv = pgKvTable("xtandard_kv", { schema: "app" });
+
+// storage.ts
+import { createDrizzleStorage } from "@xtandard/kit/storage/drizzle";
+const storage = createDrizzleStorage({ db: drizzle(pool), table: kv }); // dialect read from db
+```
+
+- The table factories take a **required** `name` (products pass their persisted name; ADR 0005)
+  and `extraColumns` / `extraIndexes`; `pgKvTable` takes `schema`, `mysqlKvTable` takes `keyLength`
+  (default 512). Keys are `text COLLATE "C"` (pg), `varchar … COLLATE utf8mb4_bin` (MySQL) or `text`
+  (SQLite). `textC(name)` and `binVarchar(name, length)` build the same key columns for product
+  tables.
+- The **`drizzle/*` subpaths import `drizzle-orm` statically**: they build tables synchronously, so
+  importing them requires `drizzle-orm`. `storage/drizzle` loads it lazily.
+- `createDrizzleStorage` issues no DDL and never closes `db`. CAS is one statement on all three
+  dialects: `jsonb` equality on pg, `JSON` equality on MySQL (with a found-rows fallback for drivers
+  without `CLIENT_FOUND_ROWS`), canonical text on SQLite with the structural fallback for legacy rows.
+- `getKeys` on MySQL matches the bytewise range `key >= prefix AND key < successor(prefix)` rather
+  than `LIKE 'prefix%'`: MySQL's range optimizer skips supplementary characters (emoji) for an
+  indexed `LIKE` on a `utf8mb4_bin` key. Both are index-usable.
+- A MySQL table created before the key column was binary-collated:
+
+  ```sql
+  ALTER TABLE xtandard_kv MODIFY `key` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL;
+  ```
+
 ## Change notifications: `withWatch` and `pgListenNotify`
 
 `withWatch(storage, subscribe)` adds `watch` to any storage from a change source you already have.
@@ -177,6 +256,32 @@ forking them.
 
 - **`onWrite(key, value | null)`** on memory: called after every successful write, swap and remove
   (`null`). wh mirrors its due keys into its own index with it.
+- **`…/internals` subpaths** (semi-public, versioned like any export):
+  - `storage/sqlite/internals`: `sqliteConnection(options, ddl)`, `bunSqliteExecutor`,
+    `sqliteKvStorage(table, exec)`, `sqliteKvSchema`, `SqliteExecutor`.
+  - `storage/libsql/internals`: `libsqlConnection(options, ddl)`, `libsqlExecutor`, and the same
+    SQLite core.
+  - `storage/postgres/internals`: `pgConnection(client, connectionString)`, `pgReady(connection,
+ddl)`, `postgresKvStorage(table, exec)`, `postgresStorageSchema`.
+  - `storage/drizzle/internals`: `detectDrizzleDialect`, `affectedRows`, `drizzleSql`,
+    `DrizzleLikeDatabase`.
+
+  The connection helpers take a list of DDL statements that run once (retried after a failure).
+  au's event log passes its own tables there and reuses the executor for its queries:
+
+  ```ts
+  import {
+    pgConnection,
+    pgReady,
+    postgresKvStorage,
+    postgresStorageSchema,
+  } from "@xtandard/kit/storage/postgres/internals";
+
+  const connection = pgConnection(options.client, options.connectionString);
+  const ready = pgReady(connection, [postgresStorageSchema(table), ...eventLogDdl]);
+  const kv = postgresKvStorage(table, ready);
+  const events = createEventLog(ready); // product code
+  ```
 
 ## Stored-data compatibility (ADR 0005)
 
@@ -185,6 +290,9 @@ Upgrading a product never makes existing keys unreadable or swaps fail forever:
 - **File:** keys without empty segments map to the same paths as before; legacy unencoded trees are
   handled by `legacy` and `migrateFileStorage`.
 - **unstorage:** only a trailing `$` changed spelling, and reads fall back to both older spellings.
+- **New-table DDL only:** `COLLATE "C"` (pg) and `utf8mb4_bin` (MySQL) apply to tables the kit
+  or the factories create; older tables keep working through the exact prefix post-filter, and the
+  optional migration SQL is above.
 - **CAS on legacy values:** writes are canonical. A swap first tries the canonical form, then reads
   the stored value, compares it structurally and swaps on the exact stored form, with bounded
   retries.
@@ -235,3 +343,9 @@ runStorageConformance("postgres", () => createPostgresStorage({ client, table: f
   file watch no longer reports a write as `remove`, file writes are atomic, empty key segments are
   distinct keys (file, unstorage), unstorage keys ending in `$` are listed, memory CAS checks own
   properties, and `withWatch` results survive a spread.
+- SQL drivers (postgres, drizzle): a stored JSON **string** that looks like JSON (`"123"`) now reads
+  back as that string; the copies parsed it a second time (`123`). sqlite/libsql/postgres/drizzle
+  now all have `compareAndSwap`, and the drizzle driver has it on MySQL too.
+- Pass the persisted names explicitly: `table` (sqlite, libsql, postgres; the kit default is the
+  neutral `"xtandard_kv"`), the drizzle table `name` (now required), and the `pgListenNotify`
+  channel. `test/fixtures/stored-data/products.json` lists each product's values.

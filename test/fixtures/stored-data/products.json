@@ -1,0 +1,54 @@
+{
+  "description": "Each product's persisted defaults as its last pre-kit release shipped them (ADR 0005). Products pass these explicitly to the kit; the kit has no implicit product defaults.",
+  "products": {
+    "wh": {
+      "table": "xtandard_webhooks",
+      "mongoDb": "xtandard_webhooks",
+      "mongoCollection": "webhooks_kv",
+      "pgChannel": "xtandard_webhooks",
+      "keyRoot": "whk"
+    },
+    "fl": {
+      "table": "xtandard_flags",
+      "mongoDb": "xtandard_flags",
+      "mongoCollection": "flags_kv",
+      "pgChannel": "xtandard_flags",
+      "keyRoot": "flags"
+    },
+    "au": {
+      "table": "xtandard_audit",
+      "mongoDb": "xtandard_audit",
+      "mongoCollection": "audit_kv",
+      "pgChannel": "xtandard_audit",
+      "keyRoot": "aud"
+    },
+    "li": {
+      "table": "xtandard_links_kv",
+      "mongoDb": "xtandard_links",
+      "mongoCollection": "links_kv",
+      "pgChannel": "xtandard_links",
+      "keyRoot": "lnk"
+    },
+    "en": {
+      "table": "xtandard_entitlements_kv",
+      "mongoDb": "xtandard_entitlements",
+      "mongoCollection": "entitlements_kv",
+      "pgChannel": "xtandard_entitlements",
+      "keyRoot": "ent"
+    }
+  },
+  "legacyDdl": {
+    "postgres": "CREATE TABLE {table} (key text PRIMARY KEY, value jsonb NOT NULL)",
+    "sqlite": "CREATE TABLE {table} (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+  },
+  "rows": [
+    {
+      "key": "{root}/Acme/config",
+      "json": "{\"z\":1,\"a\":{\"y\":[1,{\"q\":2,\"b\":1}],\"x\":null}}"
+    },
+    { "key": "{root}/acme/config", "json": "{\"b\":true,\"a\":false}" },
+    { "key": "{root}/acme/name", "json": "\"123\"" },
+    { "key": "{root}/acme/list", "json": "[3,1,2]" },
+    { "key": "{root}/acme/n", "json": "42" }
+  ]
+}
