@@ -73,6 +73,10 @@ xtandard-kit api-surface --diff /tmp/before.json /tmp/after.json     # exits 1 o
 Additions are printed with `+`, removals with `-`. A subpath that starts failing to import also
 counts as a removal.
 
+It compares **names, not signatures**. A changed parameter type, a narrowed union or a removed
+interface member keeps the same names, so it passes. Type-shape changes still rely on the
+product's own type tests (`*.test-d.ts`) and typecheck.
+
 ## Config factories
 
 ```ts
