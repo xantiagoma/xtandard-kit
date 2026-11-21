@@ -1,0 +1,49 @@
+=== webhooks (      43 commits)
+bc53bad 2026-11-21 fix(site): serve og:url and sitemap URLs over https (#6)
+e4b0dc1 2026-11-21 fix(storage): case-exact keys and literal prefixes on every backend (#5)
+986ad99 2026-10-31 fix(react): embedded components resolve one theme and follow the host
+c1f27b3 2026-07-05 fix(react): scope the embed stylesheet + portals so it can't leak into the host app
+5b151c1 2026-07-04 fix: canonical idempotency comparison + panel honors a prebuilt core's queue storage
+543e1fa 2026-07-04 fix: resolve confirmed findings from the workflow code review
+=== flags (     154 commits)
+f1b90e7 2026-11-21 fix(brand): centre the symbol on the wordmark in the horizontal lockups (#20)
+2ada92e 2026-11-21 fix(site): serve og:url, og:image and sitemap URLs over https (#16)
+c9d27ae 2026-11-21 fix(storage): exact keys and literal prefixes on every backend (#15)
+e98d7db 2026-11-20 fix(docs): only export … from statements count as re-exporting another entry point (#14)
+de6600e 2026-10-31 fix(react): embedded dashboard resolves to one theme; theme="inherit" follows the host
+cc2141e 2026-07-05 fix(react): scope the embed stylesheet + portals so it can't leak into the host app
+8397b69 2026-07-01 fix(storage): make Drizzle exports compatible with drizzle-orm 1.0 beta
+20760de 2026-06-30 fix(examples): map @xtandard/flags/hooks/* to source in examples tsconfig
+723121c 2026-06-30 fix(hooks): map HookDeniedError from separate bundles by name, not instanceof
+8bdb873 2026-06-30 fix(ci): exclude cli.ts from coverage; add pre-commit + pre-push hooks
+8810808 2026-06-30 fix(ci): exclude changelogen's CHANGELOG.md from the format check
+186ee2d 2026-06-30 fix(examples/flags-sdk): anchor uiDir resolution at cwd, not import.meta.url
+7475369 2026-06-30 fix(server): resolve dist/ui when running from source (examples / file: links)
+0a84fa2 2026-06-29 fix(snapshot): make the audit log append-only
+d34de75 2026-06-29 fix(ui): audit view crashed rendering the actor (React error #31)
+66e90c9 2026-06-29 fix(examples): resolve @xtandard/flags/* in the editor via examples/tsconfig.json
+b32f043 2026-06-29 fix(ci): redis watch test self-enables keyspace notifications; add type-level tests
+e9210e5 2026-06-29 fix(docker): correct multi-source COPY; verify image builds & serves /healthcheck
+=== audit (      26 commits)
+f8b0c4a 2026-11-21 fix(tooling): staged fmt no longer fails on mdx-only or CHANGELOG-only commits (#24)
+058b787 2026-11-21 fix(brand): vertically centre the symbol on the wordmark in the horizontal lockups (#23)
+6761a34 2026-11-21 fix: portal SPA waits for /config before the default route; integer ms in ids; cli self-run (#20)
+ee2306f 2026-11-21 fix(drizzle-audit): include old/new data and metadata in content-derived ids (#18)
+c8a72c7 2026-11-21 fix(site): force https for canonical URLs, sitemap and og:image (#15)
+ed8bc48 2026-11-21 fix(storage/redis): exact startsWith post-filter on getKeys (#14)
+6d4114c 2026-11-21 fix(storage/unstorage): plain string-prefix getKeys; conformance covers : and %25 and mid-segment prefixes (#12)
+55ab3d9 2026-11-20 fix(storage): case-exact keys and literal prefixes on file, SQL and unstorage backends (#10)
+11f3c06 2026-11-20 fix(streams,recorder): new tenants under startFrom now, per-batch lease renewal, enqueue-time ids (#4)
+=== links (      39 commits)
+50445c0 2026-11-21 fix(hooks): don't fail pre-commit on commits touching only fmt-ignored files (#17)
+50f4039 2026-11-21 fix(brand): centre horizontal lockups with the shared xtandard rule (baseline - capHeight/2) (#14)
+6dd9512 2026-11-21 fix(ui): show conversions under visitor filters; mongodb doc link (#7)
+bf20268 2026-11-21 fix: findings from the docs review (Workers waitUntil, native deferred claims, CLI prune, VISITOR_SALT, README) (#4)
+2acc19a 2026-11-20 fix: monotonic ids within a millisecond; import rows echo their (redacted) input
+0502400 2026-11-20 fix(storage/unstorage): lossless key escaping (? \\ : %) and plain string-prefix getKeys; conformance covers ? ] \\ : and case-distinct tenants on every driver
+79a2c13 2026-11-20 fix(redirect): unknown slugs fall through in handle() unless the domain sets notFoundUrl
+8a577b5 2026-11-20 fix(storage): case-exact keys and literal prefixes on every SQL/file backend
+=== entitlements (      41 commits)
+7a93ab4 2026-11-21 fix(engine): default counters persist in CAS-capable state storage; docs: Next.js uiDir (#10)
+afca24b 2026-11-21 fix(engine): billing_period falls back to UTC calendar months without a base subscription (#8)
+ed237f2 2026-11-21 fix(site): serve og:url, og:image and sitemap over https (#3)

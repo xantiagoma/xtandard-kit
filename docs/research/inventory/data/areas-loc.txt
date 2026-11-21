@@ -1,0 +1,23 @@
+area | webhooks | flags | audit | links | entitlements | total
+storage drivers+contract+watch | 1966 | 1720 | 3213 | 1986 | 2187 | 11072
+drizzle table helpers | 231 | 214 | 562 | 223 | 356 | 1586
+keys.ts | 145 | 85 | 123 | 99 | 75 | 527
+auth | 381 | 381 | 381 | 381 | 381 | 1905
+authorization | 298 | 284 | 292 | 297 | 346 | 1517
+hooks (contract+log) | 303 | 312 | 251 | 179 | 224 | 1269
+adapters | 551 | 561 | 727 | 854 | 1135 | 3828
+entry-*.ts shims | 287 | 337 | 406 | 384 | 639 | 2053
+server/* (fetch handler, routes, openapi…) | 1797 | 2299 | 1892 | 2398 | 2493 | 10879
+portal.ts | 176 | 0 | 320 | 198 | 221 | 915
+cli.ts | 847 | 592 | 986 | 800 | 803 | 4028
+testing.ts | 170 | 150 | 285 | 185 | 104 | 894
+react.tsx embeds | 242 | 169 | 245 | 256 | 0 | 912
+ui shell (components/lib/theme/api/main/styles) | 2022 | 2746 | 2991 | 5971 | 3400 | 17130
+ui views + App | 2750 | 3732 | 2248 | 2484 | 3054 | 14268
+site tooling (scripts, astro, manifest) | 1168 | 1361 | 1278 | 1228 | 1227 | 6262
+scripts/ | 926 | 1384 | 2267 | 2191 | 1613 | 8381
+.github/workflows | 346 | 342 | 346 | 361 | 276 | 1671
+storage tests | 1767 | 1464 | 2383 | 1715 | 1044 | 8373
+auth/authz/adapter tests | 694 | 633 | 904 | 848 | 963 | 4042
+e2e | 522 | 542 | 732 | 501 | 623 | 2920
+all src (non-asset) | 15514 | 18765 | 21048 | 24202 | 26291 | 105820
