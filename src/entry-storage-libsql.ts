@@ -1,9 +1,15 @@
 /**
- * `@xtandard/kit/storage/libsql` — not implemented yet.
+ * `@xtandard/kit/storage/libsql` — libSQL / Turso storage over `@libsql/client` (remote, embedded
+ * replica or local file), with single-statement compare-and-swap.
  *
- * Optional peer(s): `@libsql/client`.
+ * Optional peer: `@libsql/client` (loaded on first use).
  *
  * @module
  */
 
-export {};
+export {
+  createLibsqlStorage,
+  type LibsqlClientLike,
+  type LibsqlKvStorage,
+  type LibsqlStorageOptions,
+} from "./storage/libsql.ts";
