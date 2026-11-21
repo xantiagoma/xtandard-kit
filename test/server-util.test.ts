@@ -287,3 +287,14 @@ describe("testing helpers", () => {
     expect(sink.items).toEqual([{ n: 1 }]);
   });
 });
+
+describe("pilot feedback (0.1.x)", () => {
+  test("validateKeySegment takes a maxLength", async () => {
+    const { validateKeySegment } = await import("../src/util/validation.ts");
+    expect(validateKeySegment("a".repeat(256), "k", { maxLength: 256 })).toEqual([]);
+    expect(validateKeySegment("a".repeat(257), "k", { maxLength: 256 })).toEqual([
+      { path: "k", message: "must be at most 256 characters" },
+    ]);
+    expect(validateKeySegment("a".repeat(5000), "k")).toEqual([]);
+  });
+});

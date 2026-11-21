@@ -208,7 +208,11 @@ export interface StorageRole {
   defaults?: StorageRoleDefaults;
 }
 
-/** The resolved settings a driver factory receives. Connection strings are never logged. */
+/**
+ * The resolved settings a driver factory receives (connection strings are never logged). An optional field is `undefined` when neither its env var nor
+ * the role's `defaults` set it ("no default given"). A field the role gives a default for is always
+ * set.
+ */
 export interface StorageConfig {
   driver: string;
   role: string;
@@ -282,67 +286,122 @@ async function loadEntry(
 const defined = (o: Record<string, unknown>): Record<string, unknown> =>
   Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
 
+/** A lazy loader of a storage entry module (the kit's, or a product's wrapper). */
+export type StorageEntryLoader = () => Promise<unknown>;
+
 /**
- * The default registry: each driver lazily imports the kit's storage entry, so
- * an optional peer loads only when its driver is chosen. Factory names and
- * options match the products' CLIs.
+ * The loaders {@link storageRegistryFrom} accepts, by driver name. Each module must export the
+ * factory the driver uses: `createMemoryStorage`, `createFileStorage`, `createSqliteStorage`,
+ * `createLibsqlStorage`, `createPostgresStorage`, `createMongoStorage`, `createRedisStorage` /
+ * `createRedisJSONStorage` (`redis`, `redis-json`), `createUnstorageStorage`.
  */
-export const defaultStorageRegistry: StorageRegistry = {
-  memory: async () =>
-    (await loadEntry("memory", () => import("../entry-storage-memory.ts"), "createMemoryStorage"))(
-      {},
-    ),
-  file: async (c) =>
-    (await loadEntry("file", () => import("../entry-storage-file.ts"), "createFileStorage"))(
-      defined({ dir: c.fileDir }),
-    ),
-  sqlite: async (c) =>
-    (await loadEntry("sqlite", () => import("../entry-storage-sqlite.ts"), "createSqliteStorage"))(
-      defined({ path: c.sqlitePath, table: c.sqliteTable }),
-    ),
-  libsql: async (c) =>
-    (await loadEntry("libsql", () => import("../entry-storage-libsql.ts"), "createLibsqlStorage"))(
-      defined({ url: c.libsqlUrl, authToken: c.libsqlAuthToken, table: c.sqliteTable }),
-    ),
-  postgres: async (c) =>
-    (
-      await loadEntry(
-        "postgres",
-        () => import("../entry-storage-postgres.ts"),
-        "createPostgresStorage",
-      )
-    )(defined({ connectionString: c.postgresUrl, table: c.pgTable })),
-  mongodb: async (c) =>
-    (await loadEntry("mongodb", () => import("../entry-storage-mongodb.ts"), "createMongoStorage"))(
-      defined({ url: c.mongoUrl, dbName: c.mongoDb, collectionName: c.mongoCollection }),
-    ),
-  redis: async (c) =>
-    (await loadEntry("redis", () => import("../entry-storage-redis.ts"), "createRedisStorage"))(
-      defined({ url: c.redisUrl, prefix: c.prefix }),
-    ),
-  "redis-json": async (c) =>
-    (
-      await loadEntry(
-        "redis-json",
-        () => import("../entry-storage-redis.ts"),
-        "createRedisJSONStorage",
-      )
-    )(defined({ url: c.redisUrl, prefix: c.prefix })),
-  unstorage: async () => {
-    const create = await loadEntry(
-      "unstorage",
-      () => import("../entry-storage-unstorage.ts"),
-      "createUnstorageStorage",
-    );
-    const { importPeer } = await import("../internal/peer.ts");
-    const { createStorage } = await importPeer(
-      "unstorage",
-      "@xtandard/kit/cli",
-      () => import("unstorage" as string) as Promise<{ createStorage(): unknown }>,
-    );
-    return create({ storage: createStorage() });
-  },
-};
+export type StorageEntryLoaders = Partial<
+  Record<
+    | "memory"
+    | "file"
+    | "sqlite"
+    | "libsql"
+    | "postgres"
+    | "mongodb"
+    | "redis"
+    | "redis-json"
+    | "unstorage",
+    StorageEntryLoader
+  >
+>;
+
+/**
+ * Build a {@link StorageRegistry} from entry-module loaders, with the kit's env → options mapping.
+ * Products pass **their own** wrapped entries, so the CLI gets the product's capability layers
+ * (webhooks' `claimDue`) and persisted defaults (table names), which the kit's
+ * {@link defaultStorageRegistry} cannot know. Drivers without a loader are not available.
+ *
+ * @example
+ * ```ts
+ * const drivers = storageRegistryFrom({
+ *   memory: () => import("./entry-storage-memory.ts"),
+ *   redis: () => import("./entry-storage-redis.ts"),
+ *   postgres: () => import("./entry-storage-postgres.ts"),
+ * });
+ * const storage = await storageFromEnv({ role, drivers });
+ * ```
+ */
+export function storageRegistryFrom(loaders: StorageEntryLoaders): StorageRegistry {
+  const registry: StorageRegistry = {};
+  const entry = (driver: keyof StorageEntryLoaders, factory: string) =>
+    loadEntry(driver, loaders[driver]!, factory);
+  if (loaders.memory)
+    registry.memory = async () => (await entry("memory", "createMemoryStorage"))({});
+  if (loaders.file) {
+    registry.file = async (c) =>
+      (await entry("file", "createFileStorage"))(defined({ dir: c.fileDir }));
+  }
+  if (loaders.sqlite) {
+    registry.sqlite = async (c) =>
+      (await entry("sqlite", "createSqliteStorage"))(
+        defined({ path: c.sqlitePath, table: c.sqliteTable }),
+      );
+  }
+  if (loaders.libsql) {
+    registry.libsql = async (c) =>
+      (await entry("libsql", "createLibsqlStorage"))(
+        defined({ url: c.libsqlUrl, authToken: c.libsqlAuthToken, table: c.sqliteTable }),
+      );
+  }
+  if (loaders.postgres) {
+    registry.postgres = async (c) =>
+      (await entry("postgres", "createPostgresStorage"))(
+        defined({ connectionString: c.postgresUrl, table: c.pgTable }),
+      );
+  }
+  if (loaders.mongodb) {
+    registry.mongodb = async (c) =>
+      (await entry("mongodb", "createMongoStorage"))(
+        defined({ url: c.mongoUrl, dbName: c.mongoDb, collectionName: c.mongoCollection }),
+      );
+  }
+  if (loaders.redis) {
+    registry.redis = async (c) =>
+      (await entry("redis", "createRedisStorage"))(defined({ url: c.redisUrl, prefix: c.prefix }));
+  }
+  if (loaders["redis-json"]) {
+    registry["redis-json"] = async (c) =>
+      (await entry("redis-json", "createRedisJSONStorage"))(
+        defined({ url: c.redisUrl, prefix: c.prefix }),
+      );
+  }
+  if (loaders.unstorage) {
+    registry.unstorage = async () => {
+      const create = await entry("unstorage", "createUnstorageStorage");
+      const { importPeer } = await import("../internal/peer.ts");
+      const { createStorage } = await importPeer(
+        "unstorage",
+        "@xtandard/kit/cli",
+        () => import("unstorage" as string) as Promise<{ createStorage(): unknown }>,
+      );
+      return create({ storage: createStorage() });
+    };
+  }
+  return registry;
+}
+
+/**
+ * The default registry over the **kit's own** storage entries: each driver lazily imports its
+ * entry, so an optional peer loads only when its driver is chosen. A product with capability
+ * layers or persisted defaults in its driver wrappers must pass its own registry instead (see
+ * {@link storageRegistryFrom}): this one bypasses them.
+ */
+export const defaultStorageRegistry: StorageRegistry = storageRegistryFrom({
+  memory: () => import("../entry-storage-memory.ts"),
+  file: () => import("../entry-storage-file.ts"),
+  sqlite: () => import("../entry-storage-sqlite.ts"),
+  libsql: () => import("../entry-storage-libsql.ts"),
+  postgres: () => import("../entry-storage-postgres.ts"),
+  mongodb: () => import("../entry-storage-mongodb.ts"),
+  redis: () => import("../entry-storage-redis.ts"),
+  "redis-json": () => import("../entry-storage-redis.ts"),
+  unstorage: () => import("../entry-storage-unstorage.ts"),
+});
 
 /** Options for {@link storageFromEnv}. */
 export interface StorageFromEnvOptions<S = unknown> {
@@ -633,10 +692,11 @@ export async function pkgVersion(
  * ```ts
  * // src/cli.ts
  * export async function run(argv: string[]): Promise<number> { … }
- * if (isMainModule(import.meta)) run(process.argv.slice(2)).then((code) => process.exit(code));
+ * if (isMainModule(import.meta.url)) run(process.argv.slice(2)).then((code) => process.exit(code));
  * ```
  */
-export function isMainModule(meta: { url: string; main?: boolean }): boolean {
+export function isMainModule(meta: { url: string; main?: boolean } | string): boolean {
+  if (typeof meta === "string") meta = { url: meta };
   if (typeof meta.main === "boolean") return meta.main;
   const proc = (
     globalThis as {
@@ -652,7 +712,13 @@ export function isMainModule(meta: { url: string; main?: boolean }): boolean {
   try {
     // Without synchronous built-ins (Node < 20.16) compare the plain file path, symlinks unresolved.
     const fromUrl = (u: string) => (url ? url.fileURLToPath(u) : filePath(new URL(u)));
-    const real = (p: string) => (fs ? fs.realpathSync(p) : p);
+    const real = (p: string): string => {
+      try {
+        return fs ? fs.realpathSync(p) : p;
+      } catch {
+        return p; // a path that can't be resolved (e.g. not on disk) is compared as written
+      }
+    };
     return real(fromUrl(meta.url)) === real(entry);
   } catch {
     return false;

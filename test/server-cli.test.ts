@@ -593,3 +593,40 @@ describe("pkgVersion / isMainModule", () => {
     }
   });
 });
+
+describe("pilot feedback (0.1.x)", () => {
+  it("isMainModule accepts a URL string", () => {
+    const argv1 = process.argv[1];
+    process.argv[1] = "/srv/app/dist/cli.mjs";
+    try {
+      expect(isMainModule("file:///srv/app/dist/cli.mjs")).toBe(true);
+      expect(isMainModule("file:///srv/app/dist/x.mjs")).toBe(false);
+    } finally {
+      process.argv[1] = argv1!;
+    }
+  });
+
+  it("storageRegistryFrom uses the product's own entry modules (capability layers survive)", async () => {
+    const { storageRegistryFrom, storageFromEnv } = await import("../src/cli/index.ts");
+    const made: Array<Record<string, unknown>> = [];
+    const drivers = storageRegistryFrom({
+      postgres: async () => ({
+        createPostgresStorage: (o: Record<string, unknown>) => {
+          made.push(o);
+          return { product: "wrapped", ...o };
+        },
+      }),
+    });
+    expect(Object.keys(drivers)).toEqual(["postgres"]);
+    const storage = await storageFromEnv({
+      role: { name: "STORAGE", defaults: { pgTable: "xtandard_webhooks" } },
+      drivers,
+      env: { STORAGE_DRIVER: "postgres", POSTGRES_URL: "postgres://h/db" },
+    });
+    expect(storage).toMatchObject({ product: "wrapped", table: "xtandard_webhooks" });
+    expect(made[0]).toEqual({ connectionString: "postgres://h/db", table: "xtandard_webhooks" });
+    await expect(
+      storageFromEnv({ role: { name: "STORAGE" }, drivers, env: { STORAGE_DRIVER: "redis" } }),
+    ).rejects.toThrow(/redis/);
+  });
+});

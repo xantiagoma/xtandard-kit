@@ -10,6 +10,7 @@
 export {
   buildAuthFromEnv,
   defaultStorageRegistry,
+  storageRegistryFrom,
   describeStorage,
   driverEnvOf,
   env,
@@ -21,6 +22,8 @@ export {
   serve,
   startServer,
   storageFromEnv,
+  type StorageEntryLoader,
+  type StorageEntryLoaders,
   type AuthFromEnv,
   type AuthFromEnvOptions,
   type Env,
