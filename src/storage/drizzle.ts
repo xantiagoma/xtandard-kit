@@ -64,6 +64,10 @@ export interface DrizzleLikeDatabase {
   };
   /** `delete(table).where(sql)`. */
   delete(table: Table): { where(where: SQL): PromiseLike<unknown> };
+  /** Run raw SQL (every Drizzle database has it); capability layers use it for dialect-specific statements. */
+  execute?(query: SQL): PromiseLike<unknown>;
+  /** Run `fn` in a transaction (every Drizzle database has it). */
+  transaction?<T>(fn: (tx: DrizzleLikeDatabase) => Promise<T>): Promise<T>;
 }
 
 /** The insert builder surface (upsert methods differ by dialect). */

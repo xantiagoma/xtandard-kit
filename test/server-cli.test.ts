@@ -623,6 +623,21 @@ describe("pilot feedback (0.1.x)", () => {
     }
   });
 
+  it("storageFromEnv takes a driver override (e.g. a --storage flag), still validated", async () => {
+    const { storageRegistryFrom, storageFromEnv } = await import("../src/cli/index.ts");
+    const drivers = storageRegistryFrom({
+      memory: async () => ({ createMemoryStorage: () => ({ kind: "memory" }) }),
+      file: async () => ({ createFileStorage: () => ({ kind: "file" }) }),
+    });
+    const role = { name: "STORAGE" };
+    const env = { STORAGE_DRIVER: "file" };
+    expect(await storageFromEnv({ role, drivers, env, driver: "memory" })).toEqual({
+      kind: "memory",
+    });
+    expect(await storageFromEnv({ role, drivers, env })).toEqual({ kind: "file" });
+    await expect(storageFromEnv({ role, drivers, env, driver: "nope" })).rejects.toThrow(/Unknown/);
+  });
+
   it("storageRegistryFrom uses the product's own entry modules (capability layers survive)", async () => {
     const { storageRegistryFrom, storageFromEnv } = await import("../src/cli/index.ts");
     const made: Array<Record<string, unknown>> = [];

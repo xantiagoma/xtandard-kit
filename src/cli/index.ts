@@ -414,6 +414,8 @@ export interface StorageFromEnvOptions<S = unknown> {
   drivers?: StorageRegistry<S>;
   /** Restrict the drivers this product's CLI accepts (default: every registry key). */
   allowed?: readonly string[];
+  /** The driver, overriding the role's env var (e.g. from a `--storage` flag). Still validated. */
+  driver?: string;
 }
 
 /** The driver env var of a role. */
@@ -423,13 +425,13 @@ export const driverEnvOf = (role: StorageRole): string =>
 /** Resolve a role's driver and settings from env. **An unknown driver throws.** */
 export function resolveStorageConfig(
   role: StorageRole,
-  options: { env?: Env; allowed: readonly string[] },
+  options: { env?: Env; allowed: readonly string[]; driver?: string },
 ): StorageConfig {
   const source = options.env ?? processEnv();
   const d = role.defaults ?? {};
   const name = role.name;
   const varName = driverEnvOf(role);
-  const driver = env(varName, d.driver ?? "file", source);
+  const driver = options.driver || env(varName, d.driver ?? "file", source);
   if (!options.allowed.includes(driver)) {
     throw new Error(
       `Unknown ${varName} "${driver}" (expected one of: ${options.allowed.join(", ")})`,
@@ -478,6 +480,7 @@ export async function storageFromEnv<S = unknown>(options: StorageFromEnvOptions
   const drivers = (options.drivers ?? defaultStorageRegistry) as StorageRegistry<S>;
   const config = resolveStorageConfig(options.role, {
     ...(options.env ? { env: options.env } : {}),
+    ...(options.driver ? { driver: options.driver } : {}),
     allowed: options.allowed ?? Object.keys(drivers),
   });
   const factory = drivers[config.driver];

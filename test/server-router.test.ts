@@ -445,6 +445,22 @@ describe("createRouter", () => {
     ).toBe(404);
   });
 
+  it("readonlyMessage can name the route (entitlements: 'Cannot <operationId>: … readonly')", async () => {
+    const { router } = make({
+      readonly: true,
+      readonlyStatus: 423,
+      readonlyMessage: (route) => `Cannot ${route.operationId}: the panel is in readonly mode.`,
+    });
+    const res = await router.handle(
+      req("/api/items", { method: "POST", headers: basic("admin"), body: '{"name":"x"}' }),
+      "/api/items",
+    );
+    expect(res?.status).toBe(423);
+    expect(((await res!.json()) as { error: string }).error).toMatch(
+      /^Cannot \w+: the panel is in readonly mode\.$/,
+    );
+  });
+
   it("readonly blocks mutating actions with the product's status (403 or 423)", async () => {
     const fixed = make({ readonly: true, readonlyStatus: 423 });
     const res = await fixed.router.handle(
