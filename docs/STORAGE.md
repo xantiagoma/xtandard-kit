@@ -208,6 +208,17 @@ const storage = createDrizzleStorage({ db: drizzle(pool), table: kv }); // diale
   (default 512). Keys are `text COLLATE "C"` (pg), `varchar … COLLATE utf8mb4_bin` (MySQL) or `text`
   (SQLite). `textC(name)` and `binVarchar(name, length)` build the same key columns for product
   tables.
+- **Schema stability for existing tables.** Changing a factory's key column makes drizzle-kit
+  generate an `ALTER` for every existing deployment. So both factories let a product keep the
+  column it already declared:
+  - `pgKvTable(name, { keyCollation: null })` gives a plain `text` key (the webhooks, flags, audit
+    and links tables);
+  - `mysqlKvTable(name, { keyCollation })` takes `utf8mb4_bin` (default), `utf8mb4_0900_bin` or
+    `utf8mb4_nopad_bin`.
+
+  The driver is correct with either column, because prefix queries are post-filtered with an exact
+  `startsWith`.
+
 - The **`drizzle/*` subpaths import `drizzle-orm` statically**: they build tables synchronously, so
   importing them requires `drizzle-orm`. `storage/drizzle` loads it lazily.
 - `createDrizzleStorage` issues no DDL and never closes `db`. CAS is one statement on all three

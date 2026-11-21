@@ -99,6 +99,20 @@ export interface RedisLike {
   set(key: string, value: string): Promise<unknown>;
   /** `DEL`. */
   del(key: string | string[]): Promise<unknown>;
+  /** `ZADD` (sorted sets; products keep their own indexes with it, e.g. a due-time index). */
+  zAdd(
+    key: string,
+    members: { score: number; value: string } | { score: number; value: string }[],
+  ): Promise<unknown>;
+  /** `ZREM`. */
+  zRem(key: string, members: string | string[]): Promise<unknown>;
+  /** `ZRANGEBYSCORE` (members only). */
+  zRangeByScore(
+    key: string,
+    min: number | string,
+    max: number | string,
+    options?: { LIMIT?: { offset: number; count: number } },
+  ): Promise<string[]>;
   /** `EVAL`. */
   eval(script: string, options?: { keys?: string[]; arguments?: string[] }): Promise<unknown>;
   /** RedisJSON commands (bundled in node-redis; the server needs the module). */

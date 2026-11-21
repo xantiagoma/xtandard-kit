@@ -154,6 +154,16 @@ describe("drizzle table factories", () => {
     expect(textC("k").primaryKey()).toBeTruthy();
   });
 
+  test("pgKvTable keyCollation: null keeps a plain text key (schema-stable for existing tables)", () => {
+    const plain = pgConfig(pgKvTable("legacy_kv", { keyCollation: null }) as never);
+    expect(plain.columns.map((col) => [col.name, col.getSQLType(), col.primary])).toEqual([
+      ["key", "text", true],
+      ["value", "jsonb", false],
+    ]);
+    const c = pgConfig(pgKvTable("new_kv", { keyCollation: "C" }) as never);
+    expect(c.columns[0]?.getSQLType()).toBe('text COLLATE "C"');
+  });
+
   test("mysqlKvTable: utf8mb4_bin key with keyLength; binVarchar helper (F1)", () => {
     const c = mysqlConfig(mysqlKvTable("kv", { keyLength: 191 }) as never);
     expect(c.columns.map((col) => [col.name, col.getSQLType()])).toEqual([
