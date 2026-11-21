@@ -83,6 +83,26 @@ describe("createExampleRunner", () => {
     expect(await ok.runner.main(["all", "--demo"])).toBe(0);
   });
 
+  it("seed runs before the interactive run; examples without a demo are skipped by all --demo", async () => {
+    const sdk: ExampleConfig = {
+      dir: "examples/flags-sdk",
+      kind: "server",
+      seed: ["bun", "seed.ts"],
+      run: ["bun", "dev"],
+    };
+    const h = harness({ sdk, hono });
+    expect(await h.runner.main(["sdk"])).toBe(0);
+    expect(h.calls.map((c) => c.cmd)).toEqual(["bun seed.ts", "bun dev"]);
+    expect(await h.runner.main(["sdk", "--demo"])).toBe(1);
+    expect(h.errors.join("")).toContain('"sdk" has no non-interactive demo');
+    const all = harness({ sdk, hono });
+    expect(await all.runner.main(["all", "--demo"])).toBe(0);
+    expect(all.calls.map((c) => c.cwd)).toEqual(["examples/hono"]);
+    const failingSeed = harness({ sdk }, { "examples/flags-sdk:bun seed.ts": 2 });
+    expect(await failingSeed.runner.main(["sdk"])).toBe(2);
+    expect(failingSeed.calls.map((c) => c.cmd)).toEqual(["bun seed.ts"]);
+  });
+
   it("rejects unknown examples", async () => {
     const h = harness({ hono });
     expect(await h.runner.main(["nope"])).toBe(1);

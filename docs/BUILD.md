@@ -176,7 +176,9 @@ if (import.meta.main) process.exit(await createExampleRunner(EXAMPLES).main(proc
 
 `bun scripts/example.ts hono` runs the server on a free port near `preferredPort` and prints the
 panel URL. `--demo` runs the non-interactive demo instead, `all --demo` runs every demo in turn,
-and `install: "run" | "always"` installs an example's own dependencies on first use.
+and `install: "run" | "always"` installs an example's own dependencies on first use. `seed` runs
+once before the interactive run (e.g. flags' Next.js example). `demo` is optional: an example
+without one is skipped by `all --demo`.
 
 ## Reusable test suites
 
