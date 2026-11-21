@@ -76,8 +76,25 @@ export const SUBPATHS: Subpath[] = [
     esmOnly: true,
     peers: ["react", "react-dom", "wouter", "@tanstack/react-query"],
   },
-  { path: "build", esmOnly: true, peers: ["postcss", "postcss-prefix-selector"] },
-  { path: "site", esmOnly: true, peers: ["astro", "@astrojs/starlight", "typedoc"] },
+  {
+    path: "build",
+    esmOnly: true,
+    peers: [
+      "postcss",
+      "postcss-prefix-selector",
+      "typescript",
+      "vite",
+      "vite-plus",
+      "@vitejs/plugin-react",
+      "@tailwindcss/vite",
+      "@playwright/test",
+    ],
+  },
+  {
+    path: "site",
+    esmOnly: true,
+    peers: ["astro", "@astrojs/starlight", "starlight-typedoc", "typedoc"],
+  },
 ];
 
 /** `"storage/redis"` → `"entry-storage-redis"`; the root `"."` is `index`. */
