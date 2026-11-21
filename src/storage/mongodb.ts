@@ -28,6 +28,12 @@ const SUBPATH = "@xtandard/kit/storage/mongodb";
 
 /** Options for {@link createMongoStorage}. */
 export interface MongoStorageOptions {
+  /**
+   * The import path to name in error messages (a missing peer, a missing `client`/`url`…), e.g.
+   * `"@xtandard/webhooks/storage/mongodb"` when a product re-exports this driver. Default: the kit
+   * subpath.
+   */
+  subpath?: string;
   /** A pre-constructed (optionally pre-connected) `MongoClient`. Never closed by the driver. */
   client?: MongoClient;
   /** Connection string; a `MongoClient` is created lazily when no `client` is given. */
@@ -200,7 +206,7 @@ export function mongoKvStorage(
  */
 export function createMongoStorage(options: MongoStorageOptions): MongoKvStorage {
   const { dbName = "xtandard", collectionName = "kv" } = options;
-  const connection = mongoConnection({ ...options, dbName });
+  const connection = mongoConnection({ ...options, dbName }, options.subpath ?? SUBPATH);
   return {
     ...mongoKvStorage(() => connection.collection<KvDocument>(collectionName)),
     close: connection.close,

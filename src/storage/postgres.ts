@@ -36,6 +36,12 @@ export interface ClosableSqlClient extends SqlClient {
 
 /** Options for {@link createPostgresStorage}. */
 export interface PostgresStorageOptions {
+  /**
+   * The import path to name in error messages (a missing peer, a missing `client`/`url`…), e.g.
+   * `"@xtandard/webhooks/storage/postgres"` when a product re-exports this driver. Default: the kit
+   * subpath.
+   */
+  subpath?: string;
   /** A pre-built client (`pg` `Pool`/`Client`, `PGlite`, …). Never closed by the driver. */
   client?: SqlClient;
   /** Connection string used to create a `pg` `Pool` lazily when no `client` is given. */
@@ -203,7 +209,11 @@ export function postgresKvStorage(
  */
 export function createPostgresStorage(options: PostgresStorageOptions = {}): PostgresKvStorage {
   const table = options.table ?? "xtandard_kv";
-  const connection = pgConnection(options.client, options.connectionString ?? options.url);
+  const connection = pgConnection(
+    options.client,
+    options.connectionString ?? options.url,
+    options.subpath ?? SUBPATH,
+  );
   return {
     ...postgresKvStorage(table, pgReady(connection, [postgresStorageSchema(table)])),
     close: connection.close,

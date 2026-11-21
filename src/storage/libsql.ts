@@ -20,6 +20,12 @@ const SUBPATH = "@xtandard/kit/storage/libsql";
 
 /** Options for {@link createLibsqlStorage}. */
 export interface LibsqlStorageOptions {
+  /**
+   * The import path to name in error messages (a missing peer, a missing `client`/`url`…), e.g.
+   * `"@xtandard/webhooks/storage/libsql"` when a product re-exports this driver. Default: the kit
+   * subpath.
+   */
+  subpath?: string;
   /** libSQL URL (`libsql://…`, `https://…`, `file:…`, `:memory:`). Used when no `client`. */
   url?: string;
   /** Turso auth token for remote databases. */
@@ -122,7 +128,7 @@ export function libsqlExecutor(client: LibsqlClientLike): SqliteExecutor {
  */
 export function createLibsqlStorage(options: LibsqlStorageOptions): LibsqlKvStorage {
   const table = assertIdentifier(options.table ?? "xtandard_kv");
-  const connection = libsqlConnection(options, [sqliteKvSchema(table)]);
+  const connection = libsqlConnection(options, [sqliteKvSchema(table)], options.subpath ?? SUBPATH);
   return {
     ...sqliteKvStorage(table, async () => libsqlExecutor(await connection.get())),
     close: connection.close,
