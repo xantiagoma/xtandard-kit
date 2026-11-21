@@ -222,6 +222,28 @@ const storage = createDrizzleStorage({ db: drizzle(pool), table: kv }); // diale
   ALTER TABLE xtandard_kv MODIFY `key` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL;
   ```
 
+#### MySQL: PAD SPACE
+
+`utf8mb4_bin` is a **PAD SPACE** collation: it ignores trailing spaces, so `"app/a "` and
+`"app/a"` are the same primary key. Every product's MySQL table uses it (it was the case-sensitivity
+fix, F1), and the default stays `utf8mb4_bin` so existing schemas generate no migration.
+
+- The driver guards every operation: reads, removes and swaps match keys byte-exactly, and a write
+  whose key differs from a stored key only by trailing spaces throws `KeyCollisionError` (from
+  `@xtandard/kit/storage/drizzle`) instead of overwriting it. The error names both keys and carries
+  the migration SQL.
+- New tables can opt into a NO PAD collation, which keeps such keys distinct: `utf8mb4_0900_bin`
+  on MySQL 8.0+ or `utf8mb4_nopad_bin` on MariaDB (MySQL 5.7 has neither):
+  `mysqlKvTable(name, { keyCollation: "utf8mb4_0900_bin" })`, or
+  `binVarchar(name, length, "utf8mb4_0900_bin")` for product tables.
+- Existing tables can migrate in place. The `ALTER` cannot fail on duplicates, because a PAD SPACE
+  key never stored two keys that differ only by trailing spaces:
+
+  ```sql
+  ALTER TABLE xtandard_kv MODIFY `key` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_bin NOT NULL;
+  -- MariaDB: COLLATE utf8mb4_nopad_bin
+  ```
+
 ### MongoDB
 
 ```ts
