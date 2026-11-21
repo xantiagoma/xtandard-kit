@@ -27,6 +27,10 @@ The kit hosts these reusable workflows (`on: workflow_call`):
 - Each repo keeps a small `release.yml` that calls `release-prepare` and then runs **`npm publish
   --provenance` itself**, from the downloaded tarball, and creates the GitHub release. The trusted
   publisher stays registered against that repo's own `release.yml`.
+- Each product's `docker.yml` caller has `workflow_dispatch` (plus its usual triggers), so an image can
+  be rebuilt on demand to pick up a kit patch (ADR 0007). The reusable workflow installs without a
+  stale lockfile pin on the kit: it runs `bun update @xtandard/kit` inside the image build when the
+  `refresh-kit` input is true.
 - Callers pin `@v0.MINOR` (ADR 0007) and declare permissions: `id-token: write`, `pages: write`,
   `packages: write`.
 

@@ -42,5 +42,13 @@ Users upgrade a product in place, over existing data.
 ## Consequences
 
 - Upgrading a product never makes existing keys unreadable or CAS operations fail permanently.
-- A conformance case writes non-canonical and legacy-encoded data directly through the backend, then
-  checks reads and CAS through the kit.
+- **Stored-data fixtures are permanent kit tests** (`test/fixtures/stored-data/`). Each product's
+  legacy representations are captured as fixture data:
+  - pre-encoding file trees (wh v0.1.4 and earlier, fl);
+  - unstorage keys containing `$`, `:`, `%`, `?` and `\`;
+  - non-canonical JSON rows for sqlite/libsql/postgres/mysql/mongo;
+  - RedisJSON and string-codec values;
+  - each product's default table, collection and channel names.
+
+  The fixtures are written directly through each backend. The kit must then read, list and CAS them.
+  A future kit change that orphans old keys fails CI.

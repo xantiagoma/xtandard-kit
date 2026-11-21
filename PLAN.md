@@ -169,6 +169,13 @@ runStorageConformance("postgres", () => createPostgresStorage(...), {
 2. Release a kit patch.
 3. Products' users pick it up on install. Products only refresh their lockfile and CI.
 
+**Docker images are the exception.** GHCR images bundle dependencies at build time, and the lockfile
+pins the kit. For a security fix:
+- re-run each product's `docker.yml` with `refresh-kit: true` (`workflow_dispatch`);
+- or merge a lockfile bump first.
+
+**Stored-data fixtures** for every legacy representation are permanent kit tests (ADR 0005).
+
 ## 7. Migration order and per-product checklist (phase 4)
 
 Order: **webhooks → flags → audit → links → entitlements.**

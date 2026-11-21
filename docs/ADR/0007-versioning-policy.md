@@ -28,5 +28,9 @@ types also appear in the products' published `.d.mts`.
 
 - "Add a fix once": fix it in the kit, add a test, release a kit patch, and you are done. Products only
   need a release when they want to ship a new kit MINOR, or when the fix touches product code.
+- **Exception: Docker images.** The products' GHCR images (`apps/standalone`) bundle their
+  dependencies when they are built, so a kit patch does **not** reach a running image on its own. For a
+  security fix, re-run each affected product's `docker.yml` (it has `workflow_dispatch`) after the kit
+  patch is on npm. The kit's CHANGELOG entry for such a fix says "rebuild images: wh, fl, au, li".
 - The kit must not break a minor's surface in a patch. The api-surface check runs on the kit itself in
   CI, against the last release.
