@@ -114,8 +114,9 @@ au's `pendingPages()` and en's `pending` map:
 - Every `docs/**/*.md` must be a page (or pending, or excluded with `ignoreDocs`), so a new guide
   can't be forgotten.
 - The brand files in `publicAssets` (by default `favicon.svg`, `favicon.ico`,
-  `apple-touch-icon.png` and `social.png`) are copied from `docs/assets/` into `site/public/`
-  (gitignored), so `docs/assets/` stays their only copy.
+  `apple-touch-icon.png` and `social.png`) are copied from `docs/assets/` into `site/public/`,
+  so `docs/assets/` stays their only copy. Only the listed files are overwritten: anything else in
+  `site/public/` is left alone (links commits its own files there).
 
 ## The Astro config
 

@@ -48,11 +48,15 @@ export interface LibsqlClientLike {
   execute(
     stmt: string | { sql: string; args: unknown[] },
   ): Promise<{ rows: ArrayLike<Record<string, unknown>> }>;
-  /** Run statements in one transaction (`"write"` mode). Present on `@libsql/client` clients. */
+  /**
+   * Run statements in one transaction (`"write"` mode). Present on `@libsql/client` clients. The
+   * argument type is deliberately narrow (`never[]` args), so that a real `Client`, whose `batch`
+   * takes `InStatement`s, still satisfies this interface.
+   */
   batch?(
-    stmts: Array<{ sql: string; args: unknown[] }>,
+    stmts: Array<{ sql: string; args: never[] }>,
     mode: "write",
-  ): Promise<Array<{ rowsAffected: number }>>;
+  ): Promise<ArrayLike<{ rowsAffected: number }>>;
   /** Close the client. */
   close(): void;
 }
@@ -118,10 +122,10 @@ export function libsqlExecutor(client: LibsqlClientLike): SqliteExecutor {
       if (!client.batch)
         throw new Error("libsqlExecutor: the client has no batch() for atomic writes");
       const results = await client.batch(
-        statements.map((s) => ({ sql: s.sql, args: [...s.args] })),
+        statements.map((s) => ({ sql: s.sql, args: [...s.args] as never[] })),
         "write",
       );
-      return results.map((r) => Number(r.rowsAffected));
+      return Array.from(results, (r) => Number(r.rowsAffected));
     },
   };
 }
