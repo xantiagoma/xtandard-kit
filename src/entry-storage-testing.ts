@@ -1,7 +1,26 @@
 /**
- * `@xtandard/kit/storage/testing` — not implemented yet.
+ * `@xtandard/kit/storage/testing` — the shared storage conformance suite. The test API is
+ * injected (`{ describe, test, expect }` from vitest, `bun:test`, …), so products run the same
+ * cases against their wrapped drivers and register extra suites with `runConformanceCases`.
  *
  * @module
  */
 
-export {};
+export {
+  compareAndSwapCases,
+  contractCases,
+  requireCompareAndSwap,
+  requireWatchable,
+  runConformanceCases,
+  runStorageConformance,
+  settle,
+  watchCases,
+  type ConformanceCapabilities,
+  type ConformanceCase,
+  type ConformanceContext,
+  type ConformanceMatchers,
+  type ConformanceOptions,
+  type ConformanceTestApi,
+  type MakeStorage,
+  type SeedLegacy,
+} from "./storage/testing/conformance.ts";

@@ -1,9 +1,14 @@
 /**
- * `@xtandard/kit/storage/unstorage` — not implemented yet.
+ * `@xtandard/kit/storage/unstorage` — wrap any [unstorage](https://unstorage.unjs.io) `Storage`
+ * (any driver) as a `KvStorage`, with lossless key encoding and read-through to legacy keys.
  *
- * Optional peer(s): `unstorage`.
+ * Optional peer: `unstorage` (you construct the instance; this subpath only imports its type).
  *
  * @module
  */
 
-export {};
+export {
+  createUnstorageStorage,
+  type UnstorageKvStorage,
+  type UnstorageStorageOptions,
+} from "./storage/unstorage.ts";

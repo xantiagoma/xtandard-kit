@@ -1,0 +1,5 @@
+{
+  "id": "ep_1",
+  "url": "https://acme.example/hook",
+  "enabled": true
+}
