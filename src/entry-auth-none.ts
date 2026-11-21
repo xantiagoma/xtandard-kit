@@ -1,7 +1,8 @@
 /**
- * `@xtandard/kit/auth/none` — not implemented yet.
+ * `@xtandard/kit/auth/none` — `noAuth()`: every request is the anonymous
+ * principal. Pair it with an authorization provider.
  *
  * @module
  */
 
-export {};
+export { ANONYMOUS_PRINCIPAL, noAuth } from "./auth/none.ts";
