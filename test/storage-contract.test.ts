@@ -129,7 +129,10 @@ describe("withWatch", () => {
         };
       });
     },
-    { t: { describe, test, expect } },
+    {
+      t: { describe, test, expect },
+      capabilities: { compareAndSwap: true, watch: { removals: false } },
+    },
   );
 });
 

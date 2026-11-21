@@ -9,6 +9,7 @@ runStorageConformance("memory", () => createMemoryStorage(), {
 
 runStorageConformance("memory (product key root)", () => createMemoryStorage(), {
   t: { describe, test, expect },
+  capabilities: { compareAndSwap: true, watch: true },
   keyRoot: "whk",
 });
 
