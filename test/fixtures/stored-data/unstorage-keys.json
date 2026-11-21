@@ -1,0 +1,65 @@
+{
+  "description": "Raw unstorage keys as each product release wrote them (key → raw unstorage key). wh/fl/au/li escape % ? \\ : and store $ raw; en also escapes every $ as %24. `listed: false` = unstorage hides it from getKeys (a raw trailing $ is a meta key), so it is readable but was never listable.",
+  "entries": [
+    {
+      "from": "wh",
+      "key": "whk/app/a?b",
+      "raw": "whk/app/a%3Fb",
+      "value": { "v": 1 },
+      "listed": true
+    },
+    {
+      "from": "wh",
+      "key": "whk/app/a:b",
+      "raw": "whk/app/a%3Ab",
+      "value": { "v": 2 },
+      "listed": true
+    },
+    {
+      "from": "fl",
+      "key": "flags/x/a%b",
+      "raw": "flags/x/a%25b",
+      "value": { "v": 3 },
+      "listed": true
+    },
+    {
+      "from": "fl",
+      "key": "flags/x/a\\b",
+      "raw": "flags/x/a%5Cb",
+      "value": { "v": 4 },
+      "listed": true
+    },
+    { "from": "au", "key": "aud/t/a$b", "raw": "aud/t/a$b", "value": { "v": 5 }, "listed": true },
+    {
+      "from": "au",
+      "key": "aud/t/price$",
+      "raw": "aud/t/price$",
+      "value": { "v": 6 },
+      "listed": false
+    },
+    {
+      "from": "li",
+      "key": "lnk/s/go.acme.com/50%25",
+      "raw": "lnk/s/go.acme.com/50%2525",
+      "value": { "v": 7 },
+      "listed": true
+    },
+    { "from": "li", "key": "lnk/x$/y", "raw": "lnk/x$/y", "value": { "v": 8 }, "listed": true },
+    {
+      "from": "en",
+      "key": "ent/s/end$",
+      "raw": "ent/s/end%24",
+      "value": { "v": 9 },
+      "listed": true
+    },
+    {
+      "from": "en",
+      "key": "ent/s/a$b",
+      "raw": "ent/s/a%24b",
+      "value": { "v": 10 },
+      "listed": true
+    },
+    { "from": "en", "key": "ent/x$/y", "raw": "ent/x%24/y", "value": { "v": 11 }, "listed": true },
+    { "from": "en", "key": "ent/s/a#b", "raw": "ent/s/a#b", "value": { "v": 12 }, "listed": true }
+  ]
+}
