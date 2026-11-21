@@ -195,6 +195,7 @@ describe("node bridge — responses", () => {
   });
 
   it("cancels the body when the client disconnects", async () => {
+    let stopped = false;
     const cancelled = new Promise<unknown>((resolve) => {
       void listen(
         createServer(
@@ -203,8 +204,17 @@ describe("node bridge — responses", () => {
               new Response(
                 new ReadableStream({
                   pull: (c) =>
-                    new Promise((r) => setTimeout(() => r(c.enqueue(new Uint8Array(8))), 5)),
-                  cancel: resolve,
+                    new Promise<void>((r) =>
+                      setTimeout(() => {
+                        // A pull can still be pending when the stream is cancelled.
+                        if (!stopped) c.enqueue(new Uint8Array(8));
+                        r();
+                      }, 5),
+                    ),
+                  cancel: (reason) => {
+                    stopped = true;
+                    resolve(reason);
+                  },
                 }),
               ),
           ),
