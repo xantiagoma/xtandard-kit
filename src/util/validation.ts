@@ -138,10 +138,17 @@ export const KEY_SEGMENT_REGEX = /^[a-zA-Z0-9._-]+$/;
  * Check a caller-supplied value that becomes one storage key segment (a
  * tenant, an idempotency key…). It must be a non-empty string of
  * {@link KEY_SEGMENT_REGEX} characters and must not be only dots, so it can't
- * escape its namespace (`..`) or collide with the separator.
+ * escape its namespace (`..`) or collide with the separator. `maxLength` caps it (webhooks: 256).
  */
-export function validateKeySegment(value: unknown, path: string): ValidationIssue[] {
+export function validateKeySegment(
+  value: unknown,
+  path: string,
+  options: { maxLength?: number } = {},
+): ValidationIssue[] {
   if (typeof value !== "string" || value.length === 0) return [{ path, message: "is required" }];
+  if (options.maxLength !== undefined && value.length > options.maxLength) {
+    return [{ path, message: `must be at most ${options.maxLength} characters` }];
+  }
   if (!KEY_SEGMENT_REGEX.test(value)) return [{ path, message: `must match ${KEY_SEGMENT_REGEX}` }];
   if (/^\.+$/.test(value)) return [{ path, message: `"${value}" is not an allowed key` }];
   return [];

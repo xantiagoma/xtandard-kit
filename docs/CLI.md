@@ -110,18 +110,22 @@ miss the data its earlier releases stored (ADR 0005). Use one of two approaches:
 1. **Role defaults.** Set every field a driver persists under: `prefix`, `pgTable`, `mongoDb`,
    `mongoCollection`, `sqlitePath`, `sqliteTable`, `libsqlUrl` and `fileDir`. Use the exact values
    the product's previous CLI used. The env vars still override them per deployment.
-2. **The product's own registry.** Pass `drivers` built from the product's wrapped factories,
-   which already default the names (`createPostgresStorage` from `@xtandard/webhooks/storage/postgres`):
+2. **The product's own registry (required when its driver wrappers add capabilities).** Build
+   `drivers` from the product's own entries with `storageRegistryFrom`. It applies the kit's env →
+   options mapping to the product's wrapped factories, so persisted defaults and capability layers
+   (webhooks' `claimDue`) survive. `defaultStorageRegistry` imports the kit's bare drivers and
+   bypasses both:
 
    ```ts
-   const drivers: StorageRegistry<WebhooksStorage> = {
-     ...defaultStorageRegistry, // or only the drivers the product supports
-     postgres: async (c) =>
-       (await import("./storage/postgres.ts")).createPostgresStorage({
-         connectionString: c.postgresUrl,
-         ...(c.pgTable ? { table: c.pgTable } : {}),
-       }),
-   };
+   import { storageFromEnv, storageRegistryFrom } from "@xtandard/kit/cli";
+
+   const drivers = storageRegistryFrom({
+     memory: () => import("./entry-storage-memory.ts"),
+     file: () => import("./entry-storage-file.ts"),
+     postgres: () => import("./entry-storage-postgres.ts"),
+     redis: () => import("./entry-storage-redis.ts"),
+   });
+   const storage = await storageFromEnv({ role, drivers });
    ```
 
 `test/server-cli-registry.test.ts` and `test/server.bun.test.ts` check, against the real drivers,
@@ -171,10 +175,11 @@ export async function run(argv: string[]): Promise<number> {
 
 // au 6761a34: run only when executed directly, not when imported
 // (by bin/xtandard-<product>.mjs, the standalone app, or a test).
-if (isMainModule(import.meta)) run(process.argv.slice(2)).then((code) => process.exit(code));
+if (isMainModule(import.meta.url)) run(process.argv.slice(2)).then((code) => process.exit(code));
 ```
 
-- `isMainModule` uses `import.meta.main` where the runtime has it (Bun, recent Node). Otherwise it
-  compares the module with `process.argv[1]`.
+- `isMainModule` takes `import.meta.url`, or the whole `import.meta` to use `import.meta.main`
+  where the runtime has it. Prefer the URL: a bare `import.meta` makes the CJS build warn
+  (`EMPTY_IMPORT_META`). With the URL, it compares the module with `process.argv[1]`.
 - `pkgVersion(import.meta.url)` reads `../package.json`, which is right for both `dist/cli.mjs` and
   `src/cli.ts`. It returns `"unknown"` when the file can't be read.
