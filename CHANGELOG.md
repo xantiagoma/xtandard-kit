@@ -30,6 +30,9 @@ Fixes and additions found by migrating the five products onto the kit. Backwards
   (li commits files there).
 - **workflows:** `ci.yml` starts ClickHouse with a CI-only password and a health check, and exports
   `CLICKHOUSE_URL`, `CLICKHOUSE_USER` and `CLICKHOUSE_PASSWORD` (li).
+- **workflows:** `kit-release.yml` and the product `release.yml` template in `docs/WORKFLOWS.md`
+  publish `./pack/<tarball>`. A bare `pack/<tarball>` is read by npm as a GitHub repo, so the
+  publish failed (wh, fl, au, li, en: fixed in each product's migration PR).
 - **tokens:** `create()` signs the claims `validateClaims` returns, so `verify` yields exactly what
   was signed (a normalising validator was ignored at mint time).
 
