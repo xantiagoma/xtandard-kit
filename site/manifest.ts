@@ -83,6 +83,12 @@ export const manifest = defineSiteManifest({
         },
         { slug: "project/changelog", src: "CHANGELOG.md", label: "Changelog" },
         { slug: "project/releases", src: "docs/RELEASES.md", label: "Releases", internal: true },
+        {
+          slug: "project/report",
+          src: "docs/REPORT.md",
+          label: "Migration report",
+          internal: true,
+        },
         { label: "Architecture decisions", collapsed: true, items: adrs },
         { label: "npm", link: "https://www.npmjs.com/package/@xtandard/kit" },
       ],
