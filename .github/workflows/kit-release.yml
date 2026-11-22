@@ -69,7 +69,8 @@ jobs:
           if npm view "@xtandard/kit@${VERSION}" version >/dev/null 2>&1; then
             echo "@xtandard/kit@${VERSION} is already on npm; skipping publish."
           else
-            npm publish "pack/${TARBALL}" --provenance --access public
+            # `./` is required: npm reads a bare `pack/x.tgz` as the GitHub repo `pack/x.tgz`.
+            npm publish "./pack/${TARBALL}" --provenance --access public
           fi
 
       - name: Create or publish the GitHub release
