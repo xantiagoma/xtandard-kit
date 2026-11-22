@@ -434,6 +434,9 @@ runStorageConformance("postgres", () => createPostgresStorage({ client, table: f
 ```
 
 - `make` must return an **empty** storage (or an empty namespace of a shared one) for every test.
+- The runner calls the storage's `close()` after each case. Do cleanup (dropping test tables, say)
+  through your own client, not through storages `make` returned: those are closed by then, and a
+  driver that owns its pool fails with "Cannot use a pool after calling end".
 - The cases cover: round-trips (objects, arrays, primitives, `{}` vs `[]`), overwrite and remove,
   prefix isolation, case and accent sensitivity, LIKE/GLOB/Redis/unstorage metacharacters, `$`, `#`,
   unicode (NFC ≠ NFD), empty segments, zero-padded sortable keys, many keys without duplicates; CAS
