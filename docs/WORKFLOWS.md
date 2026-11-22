@@ -148,7 +148,8 @@ jobs:
         with: { name: package, path: pack }
       - uses: actions/download-artifact@v4
         with: { name: release-notes, path: . }
-      - run: npm publish "pack/${TARBALL}" --provenance --access public
+      # `./` is required: npm reads a bare `pack/x.tgz` as the GitHub repo `pack/x.tgz`.
+      - run: npm publish "./pack/${TARBALL}" --provenance --access public
       - env: { GH_TOKEN: "${{ github.token }}" }
         run: gh release create "$TAG" --title "$TAG" --notes-file notes.md --verify-tag --latest
 ```
