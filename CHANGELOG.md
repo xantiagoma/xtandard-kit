@@ -5,6 +5,61 @@ MINOR bump is breaking, a PATCH bump is a fix or a backwards-compatible addition
 entry names the products it affects: wh = webhooks, fl = flags, au = audit, li = links,
 en = entitlements.
 
+## v0.1.1
+
+Fixes and additions found by migrating the five products onto the kit. Backwards compatible.
+
+### Fixed
+
+- **file storage, `legacy: "read-through"` (fl):** a key whose raw segments are valid encoded names
+  (`x/a%25/k`, `x/^a`) could read or delete another key's file (`x/a%/k`, `x/A`). The read-through
+  path is now used only when it is unambiguous, and the conformance suite also runs in read-through
+  mode.
+- **server, Node 20.0–20.15** (wh, fl, au, li, en; `engines` allow Node 20): the panel served the "UI
+  not built" fallback page instead of the SPA, because `process.getBuiltinModule` is missing there.
+  `resolveUiDir` and `isMainModule` now work without it.
+- **cli:** `isMainModule` compares a path it can't resolve as written, instead of returning `false`.
+- **cli:** `parseArgs` keeps negative numbers and a bare `-` as values (`--value -5`,
+  `--limit -1`, `--reason -`). Only `--…` and configured short flags start a new flag (en).
+- **ui:** `SectionCard` is a named region: a string `title` labels the `<section>` (`aria-label`),
+  as entitlements' card did. It gains `flush`, `id` and `aria-label` props, and its header wraps.
+- **storage/mongodb:** `isDuplicateKey` also recognises E11000 inside bulk-write `writeErrors`.
+- **tokens, util:** `createScopedTokens` and `createIdGenerator` read the clock late, so fake timers
+  that swap the global `Date` (`vi.setSystemTime`) move token expiry and id time.
+- **site:** the sync overwrites only the listed public assets, instead of deleting `site/public/`
+  (li commits files there).
+- **workflows:** `ci.yml` starts ClickHouse with a CI-only password and a health check, and exports
+  `CLICKHOUSE_URL`, `CLICKHOUSE_USER` and `CLICKHOUSE_PASSWORD` (li).
+- **workflows:** `kit-release.yml` and the product `release.yml` template in `docs/WORKFLOWS.md`
+  publish `./pack/<tarball>`. A bare `pack/<tarball>` is read by npm as a GitHub repo, so the
+  publish failed (wh, fl, au, li, en: fixed in each product's migration PR).
+- **tokens:** `create()` signs the claims `validateClaims` returns, so `verify` yields exactly what
+  was signed (a normalising validator was ignored at mint time).
+
+### Added
+
+- **storage:** a `subpath` option on the sqlite, libsql, postgres, mongodb, redis and drizzle
+  factories, so errors (a missing peer, a missing `client`/`url`…) name the product's import path.
+- **cli:** `storageRegistryFrom(loaders)` builds a CLI storage registry over a product's own entry
+  modules, so capability layers and persisted defaults survive. `isMainModule(import.meta.url)`
+  accepts a URL (a bare `import.meta` warns in CJS builds).
+- **util:** `validateKeySegment(value, path, { maxLength })`.
+- **util:** `@xtandard/kit/util/core`, the dependency-free part of `util` (durations, ids, canonical
+  JSON, types), which never loads `valibot` (en).
+- **server/router:** `readonlyMessage` may be a function of the route (en).
+- **cli:** `storageFromEnv` and `resolveStorageConfig` take a `driver` override, e.g. from a
+  `--storage` flag (en).
+- **storage/drizzle internals:** `DrizzleLikeDatabase` has optional `execute` and `transaction`
+  (en's counters).
+- **build:** the example runner gets a `seed` step, and `demo` is optional.
+- **storage/testing:** a `padSpaceKeys` capability, so the trailing-space case expects
+  `KeyCollisionError` on a PAD SPACE MySQL key column (the products' default) instead of failing.
+- **storage internals:** `SqliteExecutor.atomic(statements)` runs multi-statement writes all or
+  nothing (`BEGIN IMMEDIATE` on bun:sqlite, a write `batch` on libSQL), for product tables (au's
+  event log, en's counters). `LibsqlClientLike` gains an optional `batch`.
+- **util:** `canonicalStringify` accepts `undefined` members and items, like `JSON.stringify`
+  (`CanonicalInput`).
+
 ## v0.1.0
 
 The first release: one implementation of the infrastructure the five xtandard products copied from
