@@ -142,3 +142,13 @@
 - Phase 5: ready branches `docs/ecosystem-kit` for xtandard (lib) 3dd2b5e, xyte 1a21d22 and
   xtandard-image f0c6522 were sent to t1r.
 - Shared kit tarballs use unique names now (`0.1.1-dev.<sha>`), so no lockfile or cache dance.
+
+## 2026-11-22: published; product PRs
+
+- 0.1.0 published by the owner (manual first publish); trusted publishing configured.
+- The tag-triggered `kit-release.yml` run for v0.1.0 failed: `npm publish "pack/<tgz>"` is read as
+  a GitHub shorthand. Fixed in #28 (`./pack/`), with a test, and in each product's `release.yml`.
+- v0.1.1 (#22) merged and tagged; published by `kit-release.yml` with provenance; `v0.1` moved.
+- The product branches move to `^0.1.1`, PRs opened by workers (brief `MIGRATE-FINISH.md`); the lead
+  reviews and merges.
+- t1r merged the ecosystem PRs: xtandard #39, xyte #8, xtandard-image #178.
