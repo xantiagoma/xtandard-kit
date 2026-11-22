@@ -152,3 +152,11 @@
 - The product branches move to `^0.1.1`, PRs opened by workers (brief `MIGRATE-FINISH.md`); the lead
   reviews and merges.
 - t1r merged the ecosystem PRs: xtandard #39, xyte #8, xtandard-image #178.
+
+## 2026-11-22: phase 4 and 5 done
+
+- Migrations merged: webhooks #16, flags #24, audit #26, links #20, entitlements #26. Main CI is
+  green on each (CI, Pages, Docker). No API removals.
+- The kit's row is in the ecosystem section of all eight repos and of each product's docs site.
+- Final report: `docs/REPORT.md`.
+- Kit #29 documents that the conformance runner closes each case's storage (wh, fl and li hit it).
